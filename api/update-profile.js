@@ -1,10 +1,19 @@
-import pg from 'pg';
-const { Pool } = pg;
+import { MongoClient } from 'mongodb';
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-});
+const uri = process.env.MONGODB_URI || 'mongodb+srv://mathstudy:mathstudy123@cluster0.mongodb.net/mathstudydb?retryWrites=true&w=majority';
+
+let cachedClient = null;
+
+async function connectToDatabase() {
+  if (cachedClient) {
+    return cachedClient;
+  }
+
+  const client = new MongoClient(uri);
+  await client.connect();
+  cachedClient = client;
+  return client;
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -15,56 +24,21 @@ export default async function handler(req, res) {
   if (!userId) return res.status(400).json({ error: 'UserId required' });
 
   try {
-    const updates = [];
-    const values = [];
-    let paramIndex = 1;
+    const client = await connectToDatabase();
+    const db = client.db('mathstudydb');
+    const users = db.collection('users');
 
-    if (profileData.avatarUrl !== undefined) {
-      updates.push(`avatar_url = $${paramIndex++}`);
-      values.push(profileData.avatarUrl);
-    }
-    if (profileData.level !== undefined) {
-      updates.push(`level = $${paramIndex++}`);
-      values.push(profileData.level);
-    }
-    if (profileData.xp !== undefined) {
-      updates.push(`xp = $${paramIndex++}`);
-      values.push(profileData.xp);
-    }
-    if (profileData.favorites !== undefined) {
-      updates.push(`favorites = $${paramIndex++}`);
-      values.push(JSON.stringify(profileData.favorites));
-    }
+    const result = await users.findOneAndUpdate(
+      { id: userId },
+      { $set: profileData },
+      { returnDocument: 'after' }
+    );
 
-    if (updates.length === 0) {
-      return res.status(400).json({ error: 'No updates provided' });
-    }
-
-    values.push(userId);
-    const query = `UPDATE users SET ${updates.join(', ')} WHERE id = $${paramIndex} RETURNING *`;
-
-    const result = await pool.query(query, values);
-
-    if (result.rows.length === 0) {
+    if (!result) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    const row = result.rows[0];
-    const user = {
-      id: row.id,
-      username: row.username,
-      avatarUrl: row.avatar_url,
-      level: row.level,
-      xp: row.xp,
-      xpToNextLevel: row.xp_to_next_level,
-      favorites: row.favorites,
-      customGames: row.custom_games,
-      achievements: row.achievements,
-      highScores: row.high_scores,
-      createdAt: row.created_at
-    };
-
-    res.json({ success: true, user });
+    res.json({ success: true, user: result });
   } catch (error) {
     console.error('Update profile error:', error);
     res.status(500).json({ error: 'Internal server error' });

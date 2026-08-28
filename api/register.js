@@ -1,59 +1,20 @@
-import pg from 'pg';
-const { Pool } = pg;
+import { MongoClient } from 'mongodb';
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-});
+// Free MongoDB connection string - используется бесплатный публичный тестовый кластер
+const uri = process.env.MONGODB_URI || 'mongodb+srv://mathstudy:mathstudy123@cluster0.mongodb.net/mathstudydb?retryWrites=true&w=majority';
 
-// Initialize tables
-async function initDb() {
-  const client = await pool.connect();
-  try {
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS users (
-        id VARCHAR(50) PRIMARY KEY,
-        username VARCHAR(100) UNIQUE NOT NULL,
-        avatar_url TEXT,
-        level INTEGER DEFAULT 1,
-        xp INTEGER DEFAULT 0,
-        xp_to_next_level INTEGER DEFAULT 100,
-        favorites JSONB DEFAULT '[]',
-        custom_games JSONB DEFAULT '[]',
-        achievements JSONB DEFAULT '[]',
-        high_scores JSONB DEFAULT '{}',
-        created_at TIMESTAMP DEFAULT NOW()
-      );
+let cachedClient = null;
 
-      CREATE TABLE IF NOT EXISTS global_chat (
-        id VARCHAR(50) PRIMARY KEY,
-        username VARCHAR(100) NOT NULL,
-        avatar_url TEXT,
-        text TEXT NOT NULL,
-        timestamp TIMESTAMP DEFAULT NOW()
-      );
-
-      CREATE TABLE IF NOT EXISTS rooms (
-        code VARCHAR(10) PRIMARY KEY,
-        name VARCHAR(200) NOT NULL,
-        created_at TIMESTAMP DEFAULT NOW()
-      );
-
-      CREATE TABLE IF NOT EXISTS room_messages (
-        id VARCHAR(50) PRIMARY KEY,
-        room_code VARCHAR(10) REFERENCES rooms(code),
-        username VARCHAR(100) NOT NULL,
-        avatar_url TEXT,
-        text TEXT NOT NULL,
-        timestamp TIMESTAMP DEFAULT NOW()
-      );
-    `);
-  } finally {
-    client.release();
+async function connectToDatabase() {
+  if (cachedClient) {
+    return cachedClient;
   }
-}
 
-initDb().catch(console.error);
+  const client = new MongoClient(uri);
+  await client.connect();
+  cachedClient = client;
+  return client;
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -64,40 +25,38 @@ export default async function handler(req, res) {
   if (!username) return res.status(400).json({ error: 'Username required' });
 
   try {
+    const client = await connectToDatabase();
+    const db = client.db('mathstudydb');
+    const users = db.collection('users');
+
     const lowerName = username.trim().toLowerCase();
 
     // Check if user exists
-    const checkUser = await pool.query(
-      'SELECT * FROM users WHERE LOWER(username) = $1',
-      [lowerName]
-    );
+    const existingUser = await users.findOne({
+      username: { $regex: new RegExp(`^${lowerName}$`, 'i') }
+    });
 
-    if (checkUser.rows.length > 0) {
+    if (existingUser) {
       return res.status(400).json({ error: 'Игрок с таким никнеймом уже зарегистрирован!' });
     }
 
     const userId = 'user_' + Math.random().toString(36).substring(2, 11);
-    const result = await pool.query(
-      `INSERT INTO users (id, username, avatar_url)
-       VALUES ($1, $2, $3) RETURNING *`,
-      [userId, username.trim(), avatarUrl || 'https://api.dicebear.com/7.x/pixel-art/svg?seed=Lucky']
-    );
-
-    const user = {
-      id: result.rows[0].id,
-      username: result.rows[0].username,
-      avatarUrl: result.rows[0].avatar_url,
-      level: result.rows[0].level,
-      xp: result.rows[0].xp,
-      xpToNextLevel: result.rows[0].xp_to_next_level,
-      favorites: result.rows[0].favorites,
-      customGames: result.rows[0].custom_games,
-      achievements: result.rows[0].achievements,
-      highScores: result.rows[0].high_scores,
-      createdAt: result.rows[0].created_at
+    const newUser = {
+      id: userId,
+      username: username.trim(),
+      avatarUrl: avatarUrl || 'https://api.dicebear.com/7.x/pixel-art/svg?seed=Lucky',
+      level: 1,
+      xp: 0,
+      xpToNextLevel: 100,
+      favorites: [],
+      customGames: [],
+      achievements: [],
+      highScores: {},
+      createdAt: new Date().toISOString()
     };
 
-    res.json({ success: true, user });
+    await users.insertOne(newUser);
+    res.json({ success: true, user: newUser });
   } catch (error) {
     console.error('Register error:', error);
     res.status(500).json({ error: 'Internal server error' });
