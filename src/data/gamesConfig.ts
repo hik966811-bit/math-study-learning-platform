@@ -23,7 +23,7 @@ export const INITIAL_GAMES: Game[] = [
     title: 'Five Nights at Freddy\'s 2',
     description: 'The classic sequel with new animatronics and the Freddy mask.',
     category: 'action',
-    thumbnail: '/assets/games/FNAF_2.webp',
+    thumbnail: 'https://via.placeholder.com/300x300/8b5cf6/ffffff?text=FNAF+2',
     type: 'iframe',
     embedUrl: '/games/fnaf/index.html',
     rating: 4.5,

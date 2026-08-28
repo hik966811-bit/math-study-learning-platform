@@ -22,7 +22,8 @@
       "Bash(git commit -m 'Add mandatory login, remove guest mode, ensure data persistence *)",
       "Bash(grep -E \"\\\\.\\(png|jpg|jpeg|gif|webp\\)$\")",
       "Bash(git commit -m 'Major UI update: New login screen, tons of animations, improved UX *)",
-      "Bash(git commit -m 'MASSIVE UI OVERHAUL - tons of animations everywhere *)"
+      "Bash(git commit -m 'MASSIVE UI OVERHAUL - tons of animations everywhere *)",
+      "Bash(git commit -m 'FINAL FIX: Main menu 100x better + theme colors + working thumbnails + scroll *)"
     ]
   }
 }

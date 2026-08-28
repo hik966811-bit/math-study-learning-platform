@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ThemeProvider } from './context/ThemeContext';
+import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { GamesProvider } from './context/GamesContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { WebSocketProvider } from './context/WebSocketContext';
@@ -16,7 +16,7 @@ import { AddGameModal } from './components/common/AddGameModal';
 import { GamesPortalModal } from './components/modals/GamesPortalModal';
 import { Game } from './types/game';
 import { sound } from './utils/audio';
-import { Search, Gamepad2, Settings, Sparkles, LayoutGrid, Award } from 'lucide-react';
+import { Search, Gamepad2, Settings, Sparkles, LayoutGrid, Award, Zap, Globe, MessageSquare } from 'lucide-react';
 import { useGames } from './context/GamesContext';
 import { useWebSocket } from './context/WebSocketContext';
 
@@ -24,22 +24,19 @@ const HorusMainContent: React.FC = () => {
   const { allGames, toast } = useGames();
   const { onlineCount } = useWebSocket();
   const { user, isAuthenticated, isLoading } = useAuth();
+  const { theme } = useTheme();
 
-  // Active view / modals
   const [activeView, setActiveView] = useState<'home' | 'games' | 'apps' | 'browser' | 'settings' | 'chat'>('home');
   const [isAddGameOpen, setIsAddGameOpen] = useState<boolean>(false);
   const [isGamesPortalOpen, setIsGamesPortalOpen] = useState<boolean>(false);
   const [activeGame, setActiveGame] = useState<Game | null>(null);
-
-  // Search input on homepage
   const [searchQuery, setSearchQuery] = useState('');
   const [browserQuery, setBrowserQuery] = useState('');
 
-  // Show login/register modal if not authenticated
   if (isLoading) {
     return (
-      <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
-        <div className="text-white text-2xl">Loading...</div>
+      <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 animate-fade-in">
+        <div className="text-white text-2xl font-bold animate-pulse">Loading...</div>
       </div>
     );
   }
@@ -49,6 +46,7 @@ const HorusMainContent: React.FC = () => {
   }
 
   const handleSelectView = (view: 'home' | 'games' | 'apps' | 'browser' | 'settings' | 'chat') => {
+    sound.playClick();
     setActiveView(view);
   };
 
@@ -61,20 +59,15 @@ const HorusMainContent: React.FC = () => {
     }
   };
 
-  const handleOpenSearchWithQuery = (query: string) => {
-    setBrowserQuery(query);
-    setActiveView('browser');
-    sound.playClick();
-  };
-
   return (
-    <div className="min-h-screen w-full relative flex flex-col justify-between overflow-hidden select-none">
+    <div className="min-h-screen w-full relative flex flex-col justify-between overflow-hidden select-none bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       <FloatingOrbs />
 
-      <header className="relative z-10 w-full px-6 py-5 flex items-center justify-between pointer-events-none">
-        <div className="flex items-center gap-2 px-3.5 py-1.5 bg-slate-900/40 backdrop-blur-xl border border-white/10 rounded-full text-xs text-slate-300 font-mono shadow-sm pointer-events-auto">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span>online users: {onlineCount}</span>
+      {/* Top Bar */}
+      <header className="relative z-10 w-full px-6 py-6 flex items-center justify-between pointer-events-none animate-slide-down">
+        <div className="flex items-center gap-2 px-4 py-2 bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-full text-xs text-slate-300 font-mono shadow-lg pointer-events-auto hover-lift">
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-lg shadow-emerald-400/50" />
+          <span className="font-semibold">{onlineCount} online</span>
         </div>
 
         <button
@@ -82,145 +75,108 @@ const HorusMainContent: React.FC = () => {
             sound.playClick();
             setIsAddGameOpen(true);
           }}
-          className="flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-900/40 hover:bg-slate-900/60 backdrop-blur-xl border border-white/10 text-white rounded-full text-xs font-semibold shadow-sm transition-all pointer-events-auto"
+          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 backdrop-blur-xl border border-blue-400/20 text-white rounded-full text-xs font-bold shadow-lg shadow-blue-500/30 transition-all pointer-events-auto transform hover:scale-105 active:scale-95"
         >
-          <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+          <Sparkles className="w-4 h-4" />
           <span>Add Game</span>
         </button>
       </header>
 
-      <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 -mt-10 text-center">
-        <div className="animate-soft-float max-w-lg w-full flex flex-col items-center">
-          <h1 className="text-6xl sm:text-7xl md:text-8xl font-black tracking-tight text-white mb-6 drop-shadow-2xl select-none">
-            hor<span className="text-blue-400">us</span>
-          </h1>
+      {/* Main Hero Section */}
+      <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 text-center">
+        <div className="max-w-4xl w-full flex flex-col items-center space-y-8 animate-fade-in-up">
 
-          <form onSubmit={handleSearchSubmit} className="w-full max-w-md mb-5">
+          {/* Logo */}
+          <div className="relative">
+            <h1 className="text-7xl sm:text-8xl md:text-9xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-500 drop-shadow-2xl select-none animate-gradient mb-2">
+              horus
+            </h1>
+            <p className="text-slate-400 text-sm font-medium tracking-wide">Your Math Learning Platform</p>
+          </div>
+
+          {/* Search Bar */}
+          <form onSubmit={handleSearchSubmit} className="w-full max-w-2xl animate-slide-up animation-delay-100">
             <div className="relative group">
-              <Search className="w-4 h-4 text-slate-400 absolute left-4 top-3.5" />
+              <Search className="w-5 h-5 text-slate-500 absolute left-5 top-1/2 -translate-y-1/2 group-focus-within:text-blue-400 transition-colors" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search DuckDuckGo or browse web..."
-                className="w-full pl-11 pr-4 py-3 bg-slate-900/45 hover:bg-slate-900/60 focus:bg-slate-900/80 backdrop-blur-2xl border border-white/15 focus:border-blue-400 rounded-full text-sm text-white placeholder-slate-400 focus:outline-none transition-all shadow-xl"
+                placeholder="Search anything... study materials, games, web..."
+                className="w-full pl-14 pr-6 py-5 bg-slate-900/50 hover:bg-slate-900/70 focus:bg-slate-900/90 backdrop-blur-2xl border border-white/10 focus:border-blue-400/50 rounded-2xl text-base text-white placeholder-slate-500 focus:outline-none transition-all shadow-xl hover:shadow-2xl focus:shadow-blue-500/20"
               />
             </div>
           </form>
 
-          <div className="flex flex-wrap items-center justify-center gap-2.5">
+          {/* Action Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-4xl animate-slide-up animation-delay-200">
             <button
-              onClick={() => handleOpenSearchWithQuery(searchQuery || 'school study unblocked')}
-              className="flex items-center gap-2 px-5 py-2.5 bg-slate-900/50 hover:bg-white/15 backdrop-blur-xl border border-white/15 text-slate-200 hover:text-white rounded-full text-xs font-semibold shadow-lg transition-all transform hover:scale-105"
+              onClick={() => handleSelectView('games')}
+              className="group p-6 bg-gradient-to-br from-purple-500/10 to-pink-500/10 hover:from-purple-500/20 hover:to-pink-500/20 backdrop-blur-xl border border-purple-400/20 hover:border-purple-400/40 rounded-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-2 shadow-lg hover:shadow-purple-500/20"
             >
-              <Search className="w-4 h-4 text-blue-400" />
-              <span>browse study</span>
+              <div className="w-14 h-14 mx-auto mb-3 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center transform group-hover:rotate-12 transition-transform duration-300 shadow-lg">
+                <Gamepad2 className="w-7 h-7 text-white" />
+              </div>
+              <h3 className="font-bold text-white mb-1">Games</h3>
+              <p className="text-xs text-slate-400">{allGames.length}+ games</p>
             </button>
 
             <button
-              onClick={() => {
-                sound.playClick();
-                setIsGamesPortalOpen(true);
-              }}
-              className="flex items-center gap-2 px-5 py-2.5 bg-slate-900/50 hover:bg-purple-600/30 backdrop-blur-xl border border-white/15 hover:border-purple-400/50 text-white rounded-full text-xs font-semibold shadow-lg transition-all transform hover:scale-105"
+              onClick={() => handleSelectView('browser')}
+              className="group p-6 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 hover:from-blue-500/20 hover:to-cyan-500/20 backdrop-blur-xl border border-blue-400/20 hover:border-blue-400/40 rounded-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-2 shadow-lg hover:shadow-blue-500/20"
             >
-              <Gamepad2 className="w-4 h-4 text-purple-400" />
-              <span>games ({allGames.length + 80})</span>
+              <div className="w-14 h-14 mx-auto mb-3 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center transform group-hover:rotate-12 transition-transform duration-300 shadow-lg">
+                <Globe className="w-7 h-7 text-white" />
+              </div>
+              <h3 className="font-bold text-white mb-1">Browser</h3>
+              <p className="text-xs text-slate-400">Unblocked web</p>
             </button>
 
             <button
-              onClick={() => {
-                sound.playClick();
-                setActiveView('apps');
-              }}
-              className="flex items-center gap-2 px-5 py-2.5 bg-slate-900/50 hover:bg-white/15 backdrop-blur-xl border border-white/15 text-slate-200 hover:text-white rounded-full text-xs font-semibold shadow-lg transition-all transform hover:scale-105"
+              onClick={() => handleSelectView('chat')}
+              className="group p-6 bg-gradient-to-br from-green-500/10 to-emerald-500/10 hover:from-green-500/20 hover:to-emerald-500/20 backdrop-blur-xl border border-green-400/20 hover:border-green-400/40 rounded-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-2 shadow-lg hover:shadow-green-500/20"
             >
-              <LayoutGrid className="w-4 h-4 text-slate-400" />
-              <span>apps</span>
+              <div className="w-14 h-14 mx-auto mb-3 bg-gradient-to-br from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center transform group-hover:rotate-12 transition-transform duration-300 shadow-lg">
+                <MessageSquare className="w-7 h-7 text-white" />
+              </div>
+              <h3 className="font-bold text-white mb-1">Chat</h3>
+              <p className="text-xs text-slate-400">{onlineCount} online</p>
             </button>
 
             <button
-              onClick={() => {
-                sound.playClick();
-                setActiveView('settings');
-              }}
-              className="flex items-center gap-2 px-5 py-2.5 bg-slate-900/50 hover:bg-white/15 backdrop-blur-xl border border-white/15 text-slate-200 hover:text-white rounded-full text-xs font-semibold shadow-lg transition-all transform hover:scale-105"
+              onClick={() => handleSelectView('apps')}
+              className="group p-6 bg-gradient-to-br from-orange-500/10 to-amber-500/10 hover:from-orange-500/20 hover:to-amber-500/20 backdrop-blur-xl border border-orange-400/20 hover:border-orange-400/40 rounded-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-2 shadow-lg hover:shadow-orange-500/20"
             >
-              <Settings className="w-4 h-4 text-slate-400" />
-              <span>settings</span>
+              <div className="w-14 h-14 mx-auto mb-3 bg-gradient-to-br from-orange-500 to-amber-500 rounded-2xl flex items-center justify-center transform group-hover:rotate-12 transition-transform duration-300 shadow-lg">
+                <LayoutGrid className="w-7 h-7 text-white" />
+              </div>
+              <h3 className="font-bold text-white mb-1">Apps</h3>
+              <p className="text-xs text-slate-400">Tools & more</p>
             </button>
           </div>
         </div>
       </main>
 
-      <FloatingDock
-        activeView={activeView}
-        onSelectView={handleSelectView}
-      />
+      <FloatingDock activeView={activeView} onSelectView={handleSelectView} />
 
-      <div className="relative z-10 w-full px-6 py-4 flex items-center justify-end gap-2 text-[11px] text-slate-400 pointer-events-none">
-        <div className="flex items-center gap-2 pointer-events-auto">
-          <button
-            onClick={() => setActiveView('settings')}
-            className="flex items-center gap-1 px-3 py-1 bg-slate-900/40 backdrop-blur-md border border-white/10 hover:bg-white/10 rounded-full transition-colors text-slate-300"
-          >
-            <Award className="w-3 h-3 text-amber-400" />
-            <span>credits</span>
-          </button>
-          <span className="px-3 py-1 bg-slate-900/40 backdrop-blur-md border border-white/10 rounded-full text-slate-300 font-mono">
-            made by kyrylo special for Andrew Carnegie school
-          </span>
-        </div>
+      <div className="relative z-10 w-full px-6 py-4 flex items-center justify-center gap-3 text-[11px] text-slate-500 pointer-events-none">
+        <span className="px-3 py-1 bg-slate-900/40 backdrop-blur-md border border-white/10 rounded-full font-mono pointer-events-auto">
+          made with ❤️ for learning
+        </span>
       </div>
 
-      <GamesShelfModal
-        isOpen={activeView === 'games'}
-        onClose={() => setActiveView('home')}
-        onSelectGame={(game) => {
-          setActiveGame(game);
-          setActiveView('home');
-        }}
-        onOpenAddGame={() => setIsAddGameOpen(true)}
-      />
-
-      <AppsModal
-        isOpen={activeView === 'apps'}
-        onClose={() => setActiveView('home')}
-      />
-
-      <WebBrowserModal
-        isOpen={activeView === 'browser'}
-        onClose={() => setActiveView('home')}
-        initialQuery={browserQuery || searchQuery}
-      />
-
-      <SettingsModal
-        isOpen={activeView === 'settings'}
-        onClose={() => setActiveView('home')}
-      />
-
-      <ChatModal
-        isOpen={activeView === 'chat'}
-        onClose={() => setActiveView('home')}
-      />
-
-      <GamesPortalModal
-        isOpen={isGamesPortalOpen}
-        onClose={() => setIsGamesPortalOpen(false)}
-      />
-
-      <AddGameModal
-        isOpen={isAddGameOpen}
-        onClose={() => setIsAddGameOpen(false)}
-      />
-
-      <GamePlayerModal
-        game={activeGame}
-        onClose={() => setActiveGame(null)}
-      />
+      {/* Modals */}
+      <GamesShelfModal isOpen={activeView === 'games'} onClose={() => setActiveView('home')} onSelectGame={(game) => { setActiveGame(game); setActiveView('home'); }} onOpenAddGame={() => setIsAddGameOpen(true)} />
+      <AppsModal isOpen={activeView === 'apps'} onClose={() => setActiveView('home')} />
+      <WebBrowserModal isOpen={activeView === 'browser'} onClose={() => setActiveView('home')} initialQuery={browserQuery || searchQuery} />
+      <SettingsModal isOpen={activeView === 'settings'} onClose={() => setActiveView('home')} />
+      <ChatModal isOpen={activeView === 'chat'} onClose={() => setActiveView('home')} />
+      <GamesPortalModal isOpen={isGamesPortalOpen} onClose={() => setIsGamesPortalOpen(false)} />
+      <AddGameModal isOpen={isAddGameOpen} onClose={() => setIsAddGameOpen(false)} />
+      <GamePlayerModal game={activeGame} onClose={() => setActiveGame(null)} />
 
       {toast && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 animate-fade-in bg-slate-900/90 backdrop-blur-xl border border-white/20 text-white px-4 py-2 rounded-full text-xs font-medium shadow-2xl">
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 animate-bounce-in bg-slate-900/90 backdrop-blur-xl border border-white/20 text-white px-5 py-3 rounded-full text-sm font-medium shadow-2xl">
           {toast}
         </div>
       )}
