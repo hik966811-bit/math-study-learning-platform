@@ -1,5 +1,5 @@
 {
-  "name": "school-arcade-hub",
+  "name": "math-study-platform",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@mercuryworkshop/wisp-js": "^0.4.1",
+    "@upstash/redis": "^1.38.3",
     "canvas-confetti": "^1.9.4",
     "clsx": "^2.1.1",
     "express": "^5.2.1",

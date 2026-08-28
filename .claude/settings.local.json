@@ -1,7 +1,13 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit -m 'Initial commit: School arcade hub with chat *)",
+      "Bash(vercel *)",
+      "Bash(git config *)",
+      "Bash(npm run *)",
+      "Bash(npm install *)",
+      "Bash(npm uninstall *)"
     ]
   }
 }

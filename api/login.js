@@ -1,20 +1,11 @@
-import fs from 'fs';
-import path from 'path';
+import { Redis } from '@upstash/redis';
 
-const DB_PATH = path.join('/tmp', 'db.json');
+const redis = new Redis({
+  url: process.env.KV_REST_API_URL || '',
+  token: process.env.KV_REST_API_TOKEN || '',
+});
 
-const loadDb = () => {
-  if (!fs.existsSync(DB_PATH)) {
-    return { users: {}, globalChat: [], rooms: {} };
-  }
-  try {
-    return JSON.parse(fs.readFileSync(DB_PATH, 'utf8'));
-  } catch (e) {
-    return { users: {}, globalChat: [], rooms: {} };
-  }
-};
-
-export default function handler(req, res) {
+export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -22,13 +13,26 @@ export default function handler(req, res) {
   const { username } = req.body;
   if (!username) return res.status(400).json({ error: 'Username required' });
 
-  const currentDb = loadDb();
-  const lowerName = username.trim().toLowerCase();
+  try {
+    const lowerName = username.trim().toLowerCase();
+    const users = await redis.hgetall('users') || {};
 
-  const foundUser = Object.values(currentDb.users).find((u) => u.username.toLowerCase() === lowerName);
-  if (!foundUser) {
-    return res.status(404).json({ error: 'Пользователь не найден!' });
+    let foundUser = null;
+    for (const [userId, userData] of Object.entries(users)) {
+      const user = typeof userData === 'string' ? JSON.parse(userData) : userData;
+      if (user.username && user.username.toLowerCase() === lowerName) {
+        foundUser = user;
+        break;
+      }
+    }
+
+    if (!foundUser) {
+      return res.status(404).json({ error: 'Пользователь не найден!' });
+    }
+
+    res.json({ success: true, user: foundUser });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
-
-  res.json({ success: true, user: foundUser });
 }

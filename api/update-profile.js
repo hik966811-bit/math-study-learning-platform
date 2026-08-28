@@ -1,24 +1,11 @@
-import fs from 'fs';
-import path from 'path';
+import { Redis } from '@upstash/redis';
 
-const DB_PATH = path.join('/tmp', 'db.json');
+const redis = new Redis({
+  url: process.env.KV_REST_API_URL || '',
+  token: process.env.KV_REST_API_TOKEN || '',
+});
 
-const loadDb = () => {
-  if (!fs.existsSync(DB_PATH)) {
-    return { users: {}, globalChat: [], rooms: {} };
-  }
-  try {
-    return JSON.parse(fs.readFileSync(DB_PATH, 'utf8'));
-  } catch (e) {
-    return { users: {}, globalChat: [], rooms: {} };
-  }
-};
-
-const saveDb = (data) => {
-  fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
-};
-
-export default function handler(req, res) {
+export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -26,15 +13,21 @@ export default function handler(req, res) {
   const { userId, profileData } = req.body;
   if (!userId) return res.status(400).json({ error: 'UserId required' });
 
-  const currentDb = loadDb();
-  if (!currentDb.users[userId]) {
-    return res.status(404).json({ error: 'User not found' });
-  }
+  try {
+    const users = await redis.hgetall('users') || {};
+    const userData = users[userId];
 
-  currentDb.users[userId] = {
-    ...currentDb.users[userId],
-    ...profileData
-  };
-  saveDb(currentDb);
-  res.json({ success: true, user: currentDb.users[userId] });
+    if (!userData) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const user = typeof userData === 'string' ? JSON.parse(userData) : userData;
+    const updatedUser = { ...user, ...profileData };
+
+    await redis.hset('users', { [userId]: JSON.stringify(updatedUser) });
+    res.json({ success: true, user: updatedUser });
+  } catch (error) {
+    console.error('Update profile error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 }
