@@ -1,8 +1,9 @@
-import { Redis } from '@upstash/redis';
+import pg from 'pg';
+const { Pool } = pg;
 
-const redis = new Redis({
-  url: process.env.KV_REST_API_URL || '',
-  token: process.env.KV_REST_API_TOKEN || '',
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
 export default async function handler(req, res) {
@@ -15,22 +16,31 @@ export default async function handler(req, res) {
 
   try {
     const lowerName = username.trim().toLowerCase();
-    const users = await redis.hgetall('users') || {};
+    const result = await pool.query(
+      'SELECT * FROM users WHERE LOWER(username) = $1',
+      [lowerName]
+    );
 
-    let foundUser = null;
-    for (const [userId, userData] of Object.entries(users)) {
-      const user = typeof userData === 'string' ? JSON.parse(userData) : userData;
-      if (user.username && user.username.toLowerCase() === lowerName) {
-        foundUser = user;
-        break;
-      }
-    }
-
-    if (!foundUser) {
+    if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Пользователь не найден!' });
     }
 
-    res.json({ success: true, user: foundUser });
+    const row = result.rows[0];
+    const user = {
+      id: row.id,
+      username: row.username,
+      avatarUrl: row.avatar_url,
+      level: row.level,
+      xp: row.xp,
+      xpToNextLevel: row.xp_to_next_level,
+      favorites: row.favorites,
+      customGames: row.custom_games,
+      achievements: row.achievements,
+      highScores: row.high_scores,
+      createdAt: row.created_at
+    };
+
+    res.json({ success: true, user });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ error: 'Internal server error' });

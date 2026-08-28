@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: math-study-platform
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: node server.mjs
+    envVars:
+      - key: NODE_ENV
+        value: production
+
+  - type: pserv
+    name: math-study-db
+    runtime: postgres
+    plan: free
+    databaseName: mathstudydb
+    databaseUser: mathuser
