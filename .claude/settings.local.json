@@ -14,7 +14,8 @@
       "Bash(git remote *)",
       "Bash(git branch *)",
       "Bash(git push *)",
-      "Bash(git commit -m 'Add Netlify configuration *)"
+      "Bash(git commit -m 'Add Netlify configuration *)",
+      "Bash(git commit -m 'Fix: Add allowed hosts for Render deployment *)"
     ]
   }
 }

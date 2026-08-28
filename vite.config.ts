@@ -7,7 +7,13 @@ export default defineConfig({
 
   server: {
     port: 3000,
-    open: false
+    open: false,
+    host: true,
+    allowedHosts: ['math-study-learning-platform.onrender.com', '.onrender.com']
+  },
+  preview: {
+    host: true,
+    allowedHosts: ['math-study-learning-platform.onrender.com', '.onrender.com']
   },
   build: {
     outDir: 'dist',
