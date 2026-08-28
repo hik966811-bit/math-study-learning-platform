@@ -1,0 +1,142 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Default Blue Theme (Horus Style) */
+  --bg-primary: #07132b;
+  --bg-secondary: #0b1f44;
+  --bg-card: rgba(14, 34, 73, 0.55);
+  --bg-card-hover: rgba(20, 48, 102, 0.75);
+  
+  --border-color: rgba(255, 255, 255, 0.12);
+  --border-hover: rgba(96, 165, 250, 0.5);
+  
+  --text-primary: #ffffff;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  
+  --accent-primary: #3b82f6;
+  --accent-secondary: #60a5fa;
+}
+
+/* 🔵 Blue Theme (Default) */
+.theme-blue {
+  --bg-primary: #07132b;
+  --bg-secondary: #0b1f44;
+  --bg-card: rgba(14, 34, 73, 0.55);
+  --bg-card-hover: rgba(20, 48, 102, 0.75);
+  
+  --border-color: rgba(255, 255, 255, 0.14);
+  --border-hover: rgba(96, 165, 250, 0.6);
+  
+  --text-primary: #ffffff;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  
+  --accent-primary: #3b82f6;
+  --accent-secondary: #60a5fa;
+}
+
+/* ⚫ Dark Theme */
+.theme-dark {
+  --bg-primary: #07080c;
+  --bg-secondary: #10121a;
+  --bg-card: rgba(18, 20, 29, 0.65);
+  --bg-card-hover: rgba(28, 32, 46, 0.85);
+  
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(147, 197, 253, 0.4);
+  
+  --text-primary: #ffffff;
+  --text-secondary: #9ca3af;
+  --text-muted: #6b7280;
+  
+  --accent-primary: #60a5fa;
+  --accent-secondary: #93c5fd;
+}
+
+/* ⚪ White Theme */
+.theme-light {
+  --bg-primary: #f0f4f9;
+  --bg-secondary: #ffffff;
+  --bg-card: rgba(255, 255, 255, 0.85);
+  --bg-card-hover: #ffffff;
+  
+  --border-color: rgba(203, 213, 225, 0.8);
+  --border-hover: rgba(59, 130, 246, 0.6);
+  
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  
+  --accent-primary: #2563eb;
+  --accent-secondary: #3b82f6;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  user-select: none;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Glassmorphism Panels */
+.glass-panel {
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-color);
+}
+
+/* Soft Animations */
+@keyframes soft-float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+.animate-soft-float {
+  animation: soft-float 5s ease-in-out infinite;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>H.O.R.U.S Games Collection</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #0f1729 0%, #1e1b4b 50%, #0f1729 100%);
+      color: white;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding: 30px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 20px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      background: linear-gradient(90deg, #818cf8, #a78bfa, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      color: #94a3b8;
+      font-size: 1rem;
+    }
+
+    .search-bar {
+      width: 100%;
+      max-width: 500px;
+      margin: 20px auto 0;
+      padding: 12px 20px;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 50px;
+      color: white;
+      font-size: 14px;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .search-bar:focus {
+      border-color: #818cf8;
+    }
+
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+
+    .game-card {
+      position: relative;
+      aspect-ratio: 4 / 5;
+      border-radius: 16px;
+      overflow: hidden;
+      cursor: pointer;
+      background: #1a1a2e;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.2s;
+    }
+
+    .game-card:hover {
+      transform: scale(1.05);
+      border-color: #818cf8;
+      box-shadow: 0 10px 30px rgba(129, 140, 248, 0.3);
+    }
+
+    .game-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.3s;
+    }
+
+    .game-card:hover img {
+      transform: scale(1.1);
+    }
+
+    .game-card .play-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, transparent 50%, rgba(0, 0, 0, 0.9) 100%);
+      opacity: 0;
+      transition: opacity 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .game-card:hover .play-overlay {
+      opacity: 1;
+    }
+
+    .play-overlay span {
+      padding: 8px 16px;
+      background: linear-gradient(90deg, #818cf8, #a78bfa);
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 14px;
+      color: white;
+    }
+
+    .game-card .game-name {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 10px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: white;
+    }
+
+    .pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 15px;
+      padding: 20px;
+    }
+
+    .page-btn {
+      padding: 10px 20px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .page-btn:hover:not(:disabled) {
+      background: linear-gradient(90deg, #818cf8, #a78bfa);
+      transform: scale(1.05);
+    }
+
+    .page-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .page-info {
+      color: #94a3b8;
+      font-size: 14px;
+    }
+
+    .back-home {
+      display: inline-block;
+      padding: 10px 20px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: white;
+      text-decoration: none;
+      border-radius: 10px;
+      font-size: 14px;
+      transition: all 0.2s;
+      margin-bottom: 20px;
+    }
+
+    .back-home:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/" class="back-home">&larr; Back to Home</a>
+    <header>
+      <h1>Games Collection</h1>
+      <p class="subtitle" id="totalGames">80 games available</p>
+      <input type="text" class="search-bar" id="searchInput" placeholder="Search games..." />
+    </header>
+
+    <div class="games-grid" id="gamesGrid"></div>
+
+    <div class="pagination">
+      <button class="page-btn" id="prevBtn">&larr; Previous</button>
+      <span class="page-info" id="pageInfo">Page 1 of 1</span>
+      <button class="page-btn" id="nextBtn">Next &rarr;</button>
+    </div>
+  </div>
+
+  <script>
+    const GAMES_PER_PAGE = 20;
+    const TOTAL_GAMES = 80;
+    let currentPage = 1;
+    let filteredGames = [];
+
+    const gamesGrid = document.getElementById('gamesGrid');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const pageInfo = document.getElementById('pageInfo');
+    const searchInput = document.getElementById('searchInput');
+    const totalGamesEl = document.getElementById('totalGames');
+
+    function getGameList() {
+      const list = [];
+      for (let i = 1; i <= TOTAL_GAMES; i++) {
+        list.push({
+          id: i,
+          cover: `gamesss/cover(${i}).webp`,
+          name: `Game ${i}`
+        });
+      }
+      return list;
+    }
+
+    function renderGames() {
+      const startIndex = (currentPage - 1) * GAMES_PER_PAGE;
+      const endIndex = startIndex + GAMES_PER_PAGE;
+      const gamesToShow = filteredGames.slice(startIndex, endIndex);
+
+      gamesGrid.innerHTML = '';
+
+      if (gamesToShow.length === 0) {
+        gamesGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; padding: 40px; color: #94a3b8;">No games found</p>';
+      } else {
+        gamesToShow.forEach(game => {
+          const card = document.createElement('div');
+          card.className = 'game-card';
+          card.onclick = function() { launchGame(game.id); };
+          card.innerHTML = `
+            <img src="${game.cover}" alt="${game.name}" loading="lazy" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23111%22 width=%22100%22 height=%22100%22/><text x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%23555%22 font-size=%2240%22>?</text></svg>'" />
+            <div class="play-overlay">
+              <span>Play</span>
+            </div>
+            <div class="game-name">${game.name}</div>
+          `;
+          gamesGrid.appendChild(card);
+        });
+      }
+
+      const totalPages = Math.max(1, Math.ceil(filteredGames.length / GAMES_PER_PAGE));
+      pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+      prevBtn.disabled = currentPage === 1;
+      nextBtn.disabled = currentPage === totalPages;
+      totalGamesEl.textContent = `${filteredGames.length} games available`;
+    }
+
+    function launchGame(id) {
+      window.location.href = `gamesss/play.html?game=${id}`;
+    }
+
+    function filterGames(query) {
+      if (!query.trim()) {
+        filteredGames = getGameList();
+      } else {
+        const q = query.toLowerCase();
+        filteredGames = getGameList().filter(g => g.name.toLowerCase().includes(q));
+      }
+      currentPage = 1;
+      renderGames();
+    }
+
+    prevBtn.onclick = function() {
+      if (currentPage > 1) {
+        currentPage--;
+        renderGames();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    };
+
+    nextBtn.onclick = function() {
+      const totalPages = Math.ceil(filteredGames.length / GAMES_PER_PAGE);
+      if (currentPage < totalPages) {
+        currentPage++;
+        renderGames();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    };
+
+    searchInput.oninput = function(e) {
+      filterGames(e.target.value);
+    };
+
+    filteredGames = getGameList();
+    renderGames();
+  </script>
+</body>
+</html>
