@@ -19,7 +19,9 @@
       "Bash(git commit -m 'Fix allowed hosts for Render *)",
       "Bash(curl *)",
       "Bash(git commit -m 'Switch to MongoDB Atlas for database *)",
-      "Bash(git commit -m 'Add mandatory login, remove guest mode, ensure data persistence *)"
+      "Bash(git commit -m 'Add mandatory login, remove guest mode, ensure data persistence *)",
+      "Bash(grep -E \"\\\\.\\(png|jpg|jpeg|gif|webp\\)$\")",
+      "Bash(git commit -m 'Major UI update: New login screen, tons of animations, improved UX *)"
     ]
   }
 }

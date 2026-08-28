@@ -1,165 +1,177 @@
 import React, { useState } from 'react';
-import { X, UserPlus, LogIn, Sparkles, UserCheck } from 'lucide-react';
+import { User, Lock, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { AVATAR_PRESETS } from '../../data/avatars';
 import { sound } from '../../utils/audio';
 
-interface AuthModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  initialMode?: 'login' | 'register';
-}
-
-export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'register' }) => {
-  const [mode, setMode] = useState<'login' | 'register'>(initialMode);
+export const AuthModal: React.FC = () => {
+  const [isLogin, setIsLogin] = useState(true);
   const [username, setUsername] = useState('');
-  const [selectedAvatar, setSelectedAvatar] = useState(AVATAR_PRESETS[0].url);
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { register, login } = useAuth();
-
-  if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username.trim()) return;
 
-    if (mode === 'register') {
-      const ok = await register(username, selectedAvatar);
-      if (ok) onClose();
-    } else {
-      const ok = await login(username);
-      if (ok) onClose();
+    setIsLoading(true);
+    sound.playClick();
+
+    try {
+      if (isLogin) {
+        await login(username);
+      } else {
+        await register(username, 'https://api.dicebear.com/7.x/pixel-art/svg?seed=' + username);
+      }
+    } catch (error) {
+      console.error('Auth error:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-md bg-slate-900/95 border border-cyan-500/30 rounded-3xl p-6 sm:p-8 shadow-2xl shadow-cyan-500/20 text-white">
-        {/* Close Button */}
-        <button
-          onClick={() => {
-            sound.playClick();
-            onClose();
-          }}
-          className="absolute top-5 right-5 text-slate-400 hover:text-white p-1.5 rounded-xl hover:bg-slate-800 transition-colors"
-        >
-          <X className="w-5 h-5" />
-        </button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black animate-fade-in">
+      {/* Animated background gradient */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -inset-[10px] opacity-50">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-orange-500/20 rounded-full mix-blend-multiply filter blur-3xl animate-blob" />
+          <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-yellow-500/20 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000" />
+          <div className="absolute bottom-1/4 left-1/2 w-96 h-96 bg-orange-600/20 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000" />
+        </div>
+      </div>
 
-        {/* Modal Header */}
-        <div className="text-center mb-6">
-          <div className="inline-flex p-3 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 mb-3">
-            {mode === 'register' ? <UserPlus className="w-6 h-6" /> : <LogIn className="w-6 h-6" />}
+      {/* Auth Card */}
+      <div className="relative w-full max-w-md mx-4 animate-slide-up">
+        <div className="bg-zinc-900/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-zinc-800 overflow-hidden">
+          {/* Header with avatar */}
+          <div className="pt-8 pb-6 px-8 text-center">
+            <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-orange-500 to-yellow-500 rounded-2xl flex items-center justify-center transform hover:scale-110 hover:rotate-12 transition-all duration-300">
+              <User className="w-8 h-8 text-white" />
+            </div>
+            <h2 className="text-xl font-semibold text-zinc-100 mb-2 animate-fade-in">
+              Log In or Register to Continue
+            </h2>
           </div>
-          <h2 className="text-2xl font-bold font-gaming text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-400">
-            {mode === 'register' ? 'СОЗДАНИЕ АККАУНТА' : 'ВХОД В ПРОФИЛЬ'}
-          </h2>
-          <p className="text-xs text-slate-400 mt-1">
-            {mode === 'register'
-              ? 'Сохраняйте свои рекорды, качайте уровень и получайте награды!'
-              : 'Введите ваш никнейм для загрузки сохранений'}
-          </p>
-        </div>
 
-        {/* Mode Switcher */}
-        <div className="flex bg-slate-950 p-1 rounded-2xl border border-slate-800 mb-6">
-          <button
-            type="button"
-            onClick={() => {
-              sound.playClick();
-              setMode('register');
-            }}
-            className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-all ${
-              mode === 'register' ? 'bg-cyan-500 text-black shadow-neon-blue font-bold' : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            Регистрация
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              sound.playClick();
-              setMode('login');
-            }}
-            className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-all ${
-              mode === 'login' ? 'bg-cyan-500 text-black shadow-neon-blue font-bold' : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            Вход
-          </button>
-        </div>
+          {/* Tab switcher */}
+          <div className="px-8 mb-6">
+            <div className="flex gap-2 bg-zinc-800/50 rounded-2xl p-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsLogin(true);
+                  sound.playClick();
+                }}
+                className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all duration-300 ${
+                  isLogin
+                    ? 'bg-gradient-to-r from-orange-500 to-yellow-500 text-white shadow-lg transform scale-105'
+                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+                }`}
+              >
+                LOG IN
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsLogin(false);
+                  sound.playClick();
+                }}
+                className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all duration-300 ${
+                  !isLogin
+                    ? 'bg-gradient-to-r from-orange-500 to-yellow-500 text-white shadow-lg transform scale-105'
+                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+                }`}
+              >
+                REGISTER
+              </button>
+            </div>
+          </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Avatar Selector for Registration */}
-          {mode === 'register' && (
-            <div>
-              <label className="text-xs font-semibold text-cyan-300 block mb-2">Выберите Аватар</label>
-              <div className="flex items-center gap-3 mb-3">
-                <img
-                  src={selectedAvatar}
-                  alt="Selected Avatar"
-                  className="w-14 h-14 rounded-2xl border-2 border-cyan-400 bg-slate-950 p-1 shadow-neon-blue"
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="px-8 pb-8 space-y-4">
+            {/* Username field */}
+            <div className="space-y-2 animate-slide-up animation-delay-100">
+              <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                Username or Email
+              </label>
+              <div className="relative group">
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Username or email"
+                  className="w-full px-4 py-3.5 bg-zinc-800/50 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500 focus:bg-zinc-800 transition-all duration-300 pr-12 hover:border-zinc-600"
+                  required
                 />
-                <div className="text-xs text-slate-400">
-                  <span className="text-white font-medium block">Ваш игровой стиль</span>
-                  Выберите героя из списка ниже:
-                </div>
-              </div>
-              <div className="grid grid-cols-5 gap-2 max-h-36 overflow-y-auto p-2 bg-slate-950 rounded-2xl border border-slate-800">
-                {AVATAR_PRESETS.map((avatar) => (
-                  <button
-                    key={avatar.id}
-                    type="button"
-                    onClick={() => {
-                      sound.playClick();
-                      setSelectedAvatar(avatar.url);
-                    }}
-                    className={`p-1 rounded-xl transition-all border ${
-                      selectedAvatar === avatar.url
-                        ? 'border-cyan-400 bg-cyan-500/20 scale-105 shadow-neon-blue'
-                        : 'border-transparent hover:border-slate-700 bg-slate-900/50'
-                    }`}
-                  >
-                    <img src={avatar.url} alt={avatar.name} className="w-full aspect-square rounded-lg" />
-                  </button>
-                ))}
+                <User className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 group-focus-within:text-orange-500 transition-colors duration-300" />
               </div>
             </div>
-          )}
 
-          {/* Nickname Input */}
-          <div>
-            <label className="text-xs font-semibold text-cyan-300 block mb-2">Игровой Никнейм</label>
-            <input
-              type="text"
-              required
-              maxLength={20}
-              placeholder="Например: CyberDemon, ProPlayer..."
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-3 bg-slate-950 border border-slate-800 focus:border-cyan-400 rounded-2xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/20 transition-all font-medium"
-            />
-          </div>
+            {/* Password field */}
+            <div className="space-y-2 animate-slide-up animation-delay-200">
+              <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                Password
+              </label>
+              <div className="relative group">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Your password"
+                  className="w-full px-4 py-3.5 bg-zinc-800/50 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500 focus:bg-zinc-800 transition-all duration-300 pr-12 hover:border-zinc-600"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowPassword(!showPassword);
+                    sound.playClick();
+                  }}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-orange-500 transition-all duration-300 transform hover:scale-110"
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
+            </div>
 
-          {/* Submit Button */}
-          <button
-            type="submit"
-            className="w-full py-3.5 bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-600 hover:from-cyan-300 hover:to-blue-400 text-slate-950 font-extrabold rounded-2xl shadow-neon-blue transition-all transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2"
-          >
-            <Sparkles className="w-4 h-4" />
-            {mode === 'register' ? 'Создать Профиль' : 'Войти в Профиль'}
-          </button>
-        </form>
+            {/* Submit button */}
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full mt-6 py-4 bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed animate-slide-up animation-delay-300"
+            >
+              {isLoading ? (
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span>Loading...</span>
+                </div>
+              ) : (
+                'LOG IN'
+              )}
+            </button>
 
-        <div className="mt-4 text-center">
-          <button
-            onClick={() => {
-              sound.playClick();
-              onClose();
-            }}
-            className="text-xs text-slate-400 hover:text-cyan-300 transition-colors"
-          >
-            Продолжить в гостевом режиме
-          </button>
+            {/* Footer links */}
+            <div className="flex items-center justify-center gap-4 text-xs text-zinc-500 pt-4 animate-fade-in animation-delay-400">
+              <button type="button" className="hover:text-orange-500 transition-colors duration-300">
+                Forgot password?
+              </button>
+              <span>•</span>
+              <button type="button" className="hover:text-orange-500 transition-colors duration-300">
+                Email me a code
+              </button>
+            </div>
+
+            <p className="text-[10px] text-zinc-600 text-center pt-2 animate-fade-in animation-delay-500">
+              By logging in or creating an account, you agree to our{' '}
+              <span className="text-orange-500 hover:text-orange-400 transition-colors cursor-pointer">Terms of Service</span> &{' '}
+              <span className="text-orange-500 hover:text-orange-400 transition-colors cursor-pointer">Privacy Policy</span>
+            </p>
+          </form>
         </div>
       </div>
     </div>
