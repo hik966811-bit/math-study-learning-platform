@@ -9,7 +9,18 @@ export const AuthModal: React.FC = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
   const { register, login } = useAuth();
+
+  const handleTabSwitch = (newMode: boolean) => {
+    if (newMode === isLogin) return;
+    setIsAnimating(true);
+    sound.playClick();
+    setTimeout(() => {
+      setIsLogin(newMode);
+      setIsAnimating(false);
+    }, 150);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,28 +71,22 @@ export const AuthModal: React.FC = () => {
             <div className="flex gap-2 bg-zinc-800/50 rounded-2xl p-1">
               <button
                 type="button"
-                onClick={() => {
-                  setIsLogin(true);
-                  sound.playClick();
-                }}
-                className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all duration-300 ${
+                onClick={() => handleTabSwitch(true)}
+                className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all duration-300 transform ${
                   isLogin
-                    ? 'bg-gradient-to-r from-orange-500 to-yellow-500 text-white shadow-lg transform scale-105'
-                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+                    ? 'bg-gradient-to-r from-orange-500 to-yellow-500 text-white shadow-lg scale-105 animate-pulse-glow'
+                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 hover:scale-105'
                 }`}
               >
                 LOG IN
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setIsLogin(false);
-                  sound.playClick();
-                }}
-                className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all duration-300 ${
+                onClick={() => handleTabSwitch(false)}
+                className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all duration-300 transform ${
                   !isLogin
-                    ? 'bg-gradient-to-r from-orange-500 to-yellow-500 text-white shadow-lg transform scale-105'
-                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+                    ? 'bg-gradient-to-r from-orange-500 to-yellow-500 text-white shadow-lg scale-105 animate-pulse-glow'
+                    : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 hover:scale-105'
                 }`}
               >
                 REGISTER
@@ -90,7 +95,7 @@ export const AuthModal: React.FC = () => {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="px-8 pb-8 space-y-4">
+          <form onSubmit={handleSubmit} className={`px-8 pb-8 space-y-4 transition-all duration-300 ${isAnimating ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
             {/* Username field */}
             <div className="space-y-2 animate-slide-up animation-delay-100">
               <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
