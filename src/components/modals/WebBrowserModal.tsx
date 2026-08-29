@@ -80,8 +80,8 @@ export const WebBrowserModal: React.FC<WebBrowserModalProps> = ({
   // Convert real URL into unblocker proxy endpoint
   const getProxyUrl = (targetUrl: string): string => {
     const formatted = formatUrl(targetUrl);
-    // Use Alloy Proxy for better loading and no lag
-    return `https://alloyproxy.com/service/hvtrs8%2F-${formatted.replace(/https?:\/\//, '').replace(/\//g, '%2F')}`;
+    // Use multiple proxy services for reliability
+    return `https://www.croxyproxy.com/?q=${encodeURIComponent(formatted)}`;
   };
 
   // Fetch DuckDuckGo autocomplete suggestions
