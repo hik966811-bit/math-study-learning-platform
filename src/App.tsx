@@ -105,8 +105,8 @@ const HorusMainContent: React.FC = () => {
 
       <FloatingDock activeView={activeView} onSelectView={handleSelectView} />
 
-      <div className="relative z-10 w-full px-6 py-4 flex items-center justify-center gap-3 text-[11px] text-slate-500 pointer-events-none">
-        <span className="px-3 py-1 bg-slate-900/40 backdrop-blur-md border border-white/10 rounded-full font-mono pointer-events-auto">
+      <div className="relative z-10 w-full px-6 pb-24 pt-2 flex items-center justify-center gap-3 text-xs text-slate-400 pointer-events-none">
+        <span className="px-4 py-2 bg-slate-900/60 backdrop-blur-md border border-white/20 rounded-full font-mono pointer-events-auto text-white">
           website made by frost (kyrylo) for ANDREW CARNIGIE SCHOOL
         </span>
       </div>
