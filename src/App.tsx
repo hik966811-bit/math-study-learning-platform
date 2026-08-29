@@ -143,7 +143,7 @@ const HorusMainContent: React.FC = () => {
 
       <div className="relative z-10 w-full px-6 py-4 flex items-center justify-center gap-3 text-[11px] text-slate-500 pointer-events-none">
         <span className="px-3 py-1 bg-slate-900/40 backdrop-blur-md border border-white/10 rounded-full font-mono pointer-events-auto">
-          made with ❤️ for learning
+          website made by frost (kyrylo) for ANDREW CARNIGIE SCHOOL
         </span>
       </div>
 
