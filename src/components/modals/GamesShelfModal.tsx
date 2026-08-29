@@ -70,7 +70,7 @@ export const GamesShelfModal: React.FC<GamesShelfModalProps> = ({
           </div>
 
           <p className="text-zinc-400 text-sm mb-6">
-            <span className="text-orange-400 font-bold">{filteredGames.length}</span> games
+            <span className="text-blue-400 font-bold">{filteredGames.length}</span> games
           </p>
 
           {/* Search */}
@@ -81,7 +81,7 @@ export const GamesShelfModal: React.FC<GamesShelfModalProps> = ({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="search games..."
-              className="w-full pl-12 pr-4 py-4 bg-zinc-900 border border-zinc-800 rounded-2xl text-white placeholder-zinc-600 focus:outline-none focus:border-orange-500 transition-all duration-300"
+              className="w-full pl-12 pr-4 py-4 bg-zinc-900 border border-zinc-800 rounded-2xl text-white placeholder-zinc-600 focus:outline-none focus:border-blue-500 transition-all duration-300"
             />
           </div>
 
@@ -96,7 +96,7 @@ export const GamesShelfModal: React.FC<GamesShelfModalProps> = ({
                 }}
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all duration-300 transform hover:scale-105 ${
                   selectedCat === cat.id
-                    ? 'bg-orange-500 text-white shadow-lg'
+                    ? 'bg-blue-500 text-white shadow-lg'
                     : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-white'
                 }`}
               >
@@ -109,7 +109,7 @@ export const GamesShelfModal: React.FC<GamesShelfModalProps> = ({
       </header>
 
       {/* Games Grid */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-6 py-8 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 250px)' }}>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {filteredGames.map((game, idx) => (
             <div
@@ -118,14 +118,18 @@ export const GamesShelfModal: React.FC<GamesShelfModalProps> = ({
                 sound.playClick();
                 onSelectGame(game);
               }}
-              className="group relative bg-zinc-900 rounded-2xl overflow-hidden cursor-pointer border border-zinc-800 hover:border-orange-500 transition-all duration-300 transform hover:scale-105 hover:-translate-y-2 hover:shadow-2xl hover:shadow-orange-500/20 animate-scale-in"
-              style={{ animationDelay: `${idx * 0.05}s` }}
+              className="group relative bg-zinc-900 rounded-2xl overflow-hidden cursor-pointer border border-zinc-800 hover:border-blue-500 transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 hover:shadow-2xl hover:shadow-blue-500/20"
+              style={{ animation: `scale-in 0.3s ease-out ${idx * 0.03}s both` }}
             >
-              <div className="aspect-square relative overflow-hidden">
+              <div className="aspect-square relative overflow-hidden bg-gradient-to-br from-blue-900/20 to-cyan-900/20">
                 <img
-                  src={game.thumbnailUrl}
+                  src={game.thumbnailUrl || game.thumbnail || `https://via.placeholder.com/300x300/1e40af/60a5fa?text=${encodeURIComponent(game.title)}`}
                   alt={game.title}
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = `https://via.placeholder.com/300x300/1e40af/60a5fa?text=${encodeURIComponent(game.title)}`;
+                  }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 <button
@@ -134,15 +138,15 @@ export const GamesShelfModal: React.FC<GamesShelfModalProps> = ({
                     sound.playClick();
                     onSelectGame(game);
                   }}
-                  className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"
                 >
-                  <div className="w-16 h-16 rounded-full bg-orange-500 flex items-center justify-center transform scale-0 group-hover:scale-100 transition-transform duration-300">
+                  <div className="w-16 h-16 rounded-full bg-blue-500 flex items-center justify-center transform scale-0 group-hover:scale-100 transition-transform duration-300 shadow-lg shadow-blue-500/50">
                     <Play className="w-8 h-8 text-white ml-1" fill="white" />
                   </div>
                 </button>
               </div>
               <div className="p-3">
-                <h3 className="font-bold text-sm text-white truncate group-hover:text-orange-400 transition-colors">
+                <h3 className="font-bold text-sm text-white truncate group-hover:text-blue-400 transition-colors">
                   {game.title}
                 </h3>
                 <button
@@ -151,11 +155,11 @@ export const GamesShelfModal: React.FC<GamesShelfModalProps> = ({
                     sound.playClick();
                     toggleFavorite(game.id);
                   }}
-                  className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center hover:bg-black/80 transition-all duration-300 hover:scale-110"
+                  className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center hover:bg-black/80 transition-all duration-300 hover:scale-110 z-20"
                 >
                   <Heart
                     className={`w-4 h-4 transition-all duration-300 ${
-                      favorites.includes(game.id) ? 'text-rose-500 fill-rose-500' : 'text-white'
+                      favorites.includes(game.id) ? 'text-blue-500 fill-blue-500' : 'text-white'
                     }`}
                   />
                 </button>

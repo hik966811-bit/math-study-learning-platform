@@ -89,9 +89,9 @@ const HorusMainContent: React.FC = () => {
           {/* Logo */}
           <div className="relative">
             <h1 className="text-7xl sm:text-8xl md:text-9xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-500 drop-shadow-2xl select-none animate-gradient mb-2">
-              horus
+              HORUS
             </h1>
-            <p className="text-slate-400 text-sm font-medium tracking-wide">Your Math Learning Platform</p>
+            <p className="text-cyan-400 text-lg font-bold tracking-widest">ALPHA BETA</p>
           </div>
 
           {/* Search Bar */}
