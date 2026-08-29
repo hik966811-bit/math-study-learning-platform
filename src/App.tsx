@@ -100,42 +100,6 @@ const HorusMainContent: React.FC = () => {
               />
             </div>
           </form>
-
-          {/* Action Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 w-full max-w-4xl animate-slide-up animation-delay-200">
-            <button
-              onClick={() => handleSelectView('games')}
-              className="group p-6 bg-gradient-to-br from-purple-500/10 to-pink-500/10 hover:from-purple-500/20 hover:to-pink-500/20 backdrop-blur-xl border border-purple-400/20 hover:border-purple-400/40 rounded-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-2 shadow-lg hover:shadow-purple-500/20"
-            >
-              <div className="w-14 h-14 mx-auto mb-3 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center transform group-hover:rotate-12 transition-transform duration-300 shadow-lg">
-                <Gamepad2 className="w-7 h-7 text-white" />
-              </div>
-              <h3 className="font-bold text-white mb-1">Games</h3>
-              <p className="text-xs text-slate-400">{allGames.length}+ games</p>
-            </button>
-
-            <button
-              onClick={() => handleSelectView('browser')}
-              className="group p-6 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 hover:from-blue-500/20 hover:to-cyan-500/20 backdrop-blur-xl border border-blue-400/20 hover:border-blue-400/40 rounded-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-2 shadow-lg hover:shadow-blue-500/20"
-            >
-              <div className="w-14 h-14 mx-auto mb-3 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center transform group-hover:rotate-12 transition-transform duration-300 shadow-lg">
-                <Globe className="w-7 h-7 text-white" />
-              </div>
-              <h3 className="font-bold text-white mb-1">Browser</h3>
-              <p className="text-xs text-slate-400">Unblocked web</p>
-            </button>
-
-            <button
-              onClick={() => handleSelectView('apps')}
-              className="group p-6 bg-gradient-to-br from-orange-500/10 to-amber-500/10 hover:from-orange-500/20 hover:to-amber-500/20 backdrop-blur-xl border border-orange-400/20 hover:border-orange-400/40 rounded-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-2 shadow-lg hover:shadow-orange-500/20"
-            >
-              <div className="w-14 h-14 mx-auto mb-3 bg-gradient-to-br from-orange-500 to-amber-500 rounded-2xl flex items-center justify-center transform group-hover:rotate-12 transition-transform duration-300 shadow-lg">
-                <LayoutGrid className="w-7 h-7 text-white" />
-              </div>
-              <h3 className="font-bold text-white mb-1">Apps</h3>
-              <p className="text-xs text-slate-400">Tools & more</p>
-            </button>
-          </div>
         </div>
       </main>
 

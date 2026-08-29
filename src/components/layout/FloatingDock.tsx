@@ -5,7 +5,6 @@ import {
   LayoutGrid,
   Globe,
   Settings,
-  MessageSquare,
   Maximize2,
   Minimize2,
   Volume2,
@@ -14,8 +13,8 @@ import {
 import { sound } from '../../utils/audio';
 
 interface FloatingDockProps {
-  activeView: 'home' | 'games' | 'apps' | 'browser' | 'settings' | 'chat';
-  onSelectView: (view: 'home' | 'games' | 'apps' | 'browser' | 'settings' | 'chat') => void;
+  activeView: 'home' | 'games' | 'apps' | 'browser' | 'settings';
+  onSelectView: (view: 'home' | 'games' | 'apps' | 'browser' | 'settings') => void;
 }
 
 export const FloatingDock: React.FC<FloatingDockProps> = ({
@@ -40,15 +39,14 @@ export const FloatingDock: React.FC<FloatingDockProps> = ({
   };
 
   const dockItems: Array<{
-    id: 'home' | 'games' | 'apps' | 'browser' | 'settings' | 'chat';
+    id: 'home' | 'games' | 'apps' | 'browser' | 'settings';
     icon: React.ReactNode;
     label: string;
   }> = [
     { id: 'home', icon: <Home className="w-5 h-5" />, label: 'Home' },
     { id: 'games', icon: <Gamepad2 className="w-5 h-5" />, label: 'Games' },
     { id: 'apps', icon: <LayoutGrid className="w-5 h-5" />, label: 'Apps' },
-    { id: 'browser', icon: <Globe className="w-5 h-5" />, label: 'DuckDuckGo Web' },
-    { id: 'chat', icon: <MessageSquare className="w-5 h-5" />, label: 'Chat' },
+    { id: 'browser', icon: <Globe className="w-5 h-5" />, label: 'Browser' },
     { id: 'settings', icon: <Settings className="w-5 h-5" />, label: 'Settings' },
   ];
 
