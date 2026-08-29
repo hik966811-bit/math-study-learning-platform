@@ -38,15 +38,12 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ onComplete }) => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'p' || e.key === 'P') {
         e.preventDefault();
+        e.stopPropagation();
         setPKeyPressed(true);
         sound.playCoin();
         setTimeout(() => {
           handleComplete();
-          setTimeout(() => {
-            window.open('about:blank', '_self');
-            window.close();
-          }, 200);
-        }, 400);
+        }, 800);
       }
     };
     window.addEventListener('keydown', handler);
@@ -232,24 +229,34 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ onComplete }) => {
               </div>
             </div>
             <h2 className="text-3xl font-black text-white mb-3">
-              {pKeyPressed ? 'Closing...' : 'Stealth Mode'}
+              {pKeyPressed ? 'Stealth Mode Ready' : 'Stealth Mode'}
             </h2>
             <p className="text-blue-200 mb-2 max-w-md mx-auto">
               When a teacher approaches, press the
             </p>
             <div className="flex justify-center my-4">
-              <div className="px-8 py-4 bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-blue-400 rounded-2xl shadow-lg shadow-blue-500/50 animate-glow">
+              <div className={`px-8 py-4 bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-blue-400 rounded-2xl shadow-lg shadow-blue-500/50 ${pKeyPressed ? 'animate-bounce-in scale-110' : 'animate-glow'}`}>
                 <span className="text-5xl font-black text-white">P</span>
               </div>
             </div>
             <p className="text-blue-200 mb-2 max-w-md mx-auto">
               key to instantly close the entire tab
             </p>
-            <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-400/30 mt-6">
+            <p className="text-slate-400 text-xs mb-6 max-w-md mx-auto">
+              (Press P to test — it will only mark the tutorial as complete)
+            </p>
+            <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-400/30 mb-6">
               <p className="text-blue-300 text-sm font-semibold">
-                {pKeyPressed ? '✓ Tab closing in a moment...' : 'Press the P key now on your keyboard'}
+                {pKeyPressed ? 'Tutorial complete! Click below to enter.' : 'Press the P key now, or click the button below'}
               </p>
             </div>
+            <button
+              onClick={handleComplete}
+              className="group inline-flex items-center gap-2 px-10 py-4 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-black text-lg rounded-2xl shadow-lg shadow-blue-500/30 transition-all hover-mega"
+            >
+              <span>{pKeyPressed ? "Let's Go!" : 'Skip — Enter Site'}</span>
+              <Sparkles className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+            </button>
           </div>
         )}
       </div>
