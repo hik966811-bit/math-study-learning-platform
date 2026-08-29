@@ -14,7 +14,6 @@ import { Game } from './types/game';
 import { sound } from './utils/audio';
 import { Search, Sparkles, Globe, Loader2 } from 'lucide-react';
 import { WebSocketProvider } from './context/WebSocketContext';
-import { TutorialModal } from './components/modals/TutorialModal';
 import { FullscreenGuard } from './components/common/FullscreenGuard';
 import { PanicButton } from './components/common/PanicButton';
 
@@ -164,12 +163,10 @@ const HorusMainContent: React.FC = () => {
 
 const AppInner: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
-  const [showTutorial, setShowTutorial] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
-      setShowTutorial(true);
     }, 2000);
     return () => clearTimeout(timer);
   }, []);
@@ -207,10 +204,6 @@ const AppInner: React.FC = () => {
 
   if (isLoading) {
     return <LoadingScreen />;
-  }
-
-  if (showTutorial) {
-    return <TutorialModal onComplete={() => setShowTutorial(false)} />;
   }
 
   return <HorusMainContent />;
