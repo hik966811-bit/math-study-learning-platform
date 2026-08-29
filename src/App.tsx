@@ -10,23 +10,21 @@ import { GamesShelfModal } from './components/modals/GamesShelfModal';
 import { AppsModal } from './components/modals/AppsModal';
 import { SettingsModal } from './components/modals/SettingsModal';
 import { WebBrowserModal } from './components/modals/WebBrowserModal';
-import { ChatModal } from './components/modals/ChatModal';
 import { GamePlayerModal } from './components/games/GamePlayerModal';
 import { AddGameModal } from './components/common/AddGameModal';
 import { GamesPortalModal } from './components/modals/GamesPortalModal';
 import { Game } from './types/game';
 import { sound } from './utils/audio';
-import { Search, Gamepad2, Settings, Sparkles, LayoutGrid, Award, Zap, Globe, MessageSquare } from 'lucide-react';
+import { Search, Gamepad2, Settings, Sparkles, LayoutGrid, Award, Zap, Globe } from 'lucide-react';
 import { useGames } from './context/GamesContext';
 import { useWebSocket } from './context/WebSocketContext';
 
 const HorusMainContent: React.FC = () => {
   const { allGames, toast } = useGames();
-  const { onlineCount } = useWebSocket();
   const { user, isAuthenticated, isLoading } = useAuth();
   const { theme } = useTheme();
 
-  const [activeView, setActiveView] = useState<'home' | 'games' | 'apps' | 'browser' | 'settings' | 'chat'>('home');
+  const [activeView, setActiveView] = useState<'home' | 'games' | 'apps' | 'browser' | 'settings'>('home');
   const [isAddGameOpen, setIsAddGameOpen] = useState<boolean>(false);
   const [isGamesPortalOpen, setIsGamesPortalOpen] = useState<boolean>(false);
   const [activeGame, setActiveGame] = useState<Game | null>(null);
@@ -45,7 +43,7 @@ const HorusMainContent: React.FC = () => {
     return <AuthModal />;
   }
 
-  const handleSelectView = (view: 'home' | 'games' | 'apps' | 'browser' | 'settings' | 'chat') => {
+  const handleSelectView = (view: 'home' | 'games' | 'apps' | 'browser' | 'settings') => {
     sound.playClick();
     setActiveView(view);
   };
@@ -64,12 +62,7 @@ const HorusMainContent: React.FC = () => {
       <FloatingOrbs />
 
       {/* Top Bar */}
-      <header className="relative z-10 w-full px-6 py-6 flex items-center justify-between pointer-events-none animate-slide-down">
-        <div className="flex items-center gap-2 px-4 py-2 bg-slate-900/60 backdrop-blur-xl border border-white/10 rounded-full text-xs text-slate-300 font-mono shadow-lg pointer-events-auto hover-lift">
-          <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-lg shadow-emerald-400/50" />
-          <span className="font-semibold">{onlineCount} online</span>
-        </div>
-
+      <header className="relative z-10 w-full px-6 py-6 flex items-center justify-end pointer-events-none animate-slide-down">
         <button
           onClick={() => {
             sound.playClick();
@@ -109,7 +102,7 @@ const HorusMainContent: React.FC = () => {
           </form>
 
           {/* Action Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-4xl animate-slide-up animation-delay-200">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 w-full max-w-4xl animate-slide-up animation-delay-200">
             <button
               onClick={() => handleSelectView('games')}
               className="group p-6 bg-gradient-to-br from-purple-500/10 to-pink-500/10 hover:from-purple-500/20 hover:to-pink-500/20 backdrop-blur-xl border border-purple-400/20 hover:border-purple-400/40 rounded-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-2 shadow-lg hover:shadow-purple-500/20"
@@ -130,17 +123,6 @@ const HorusMainContent: React.FC = () => {
               </div>
               <h3 className="font-bold text-white mb-1">Browser</h3>
               <p className="text-xs text-slate-400">Unblocked web</p>
-            </button>
-
-            <button
-              onClick={() => handleSelectView('chat')}
-              className="group p-6 bg-gradient-to-br from-green-500/10 to-emerald-500/10 hover:from-green-500/20 hover:to-emerald-500/20 backdrop-blur-xl border border-green-400/20 hover:border-green-400/40 rounded-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-2 shadow-lg hover:shadow-green-500/20"
-            >
-              <div className="w-14 h-14 mx-auto mb-3 bg-gradient-to-br from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center transform group-hover:rotate-12 transition-transform duration-300 shadow-lg">
-                <MessageSquare className="w-7 h-7 text-white" />
-              </div>
-              <h3 className="font-bold text-white mb-1">Chat</h3>
-              <p className="text-xs text-slate-400">{onlineCount} online</p>
             </button>
 
             <button
@@ -170,7 +152,6 @@ const HorusMainContent: React.FC = () => {
       <AppsModal isOpen={activeView === 'apps'} onClose={() => setActiveView('home')} />
       <WebBrowserModal isOpen={activeView === 'browser'} onClose={() => setActiveView('home')} initialQuery={browserQuery || searchQuery} />
       <SettingsModal isOpen={activeView === 'settings'} onClose={() => setActiveView('home')} />
-      <ChatModal isOpen={activeView === 'chat'} onClose={() => setActiveView('home')} />
       <GamesPortalModal isOpen={isGamesPortalOpen} onClose={() => setIsGamesPortalOpen(false)} />
       <AddGameModal isOpen={isAddGameOpen} onClose={() => setIsAddGameOpen(false)} />
       <GamePlayerModal game={activeGame} onClose={() => setActiveGame(null)} />
@@ -189,9 +170,7 @@ export const App: React.FC = () => {
     <ThemeProvider>
       <GamesProvider>
         <AuthProvider>
-          <WebSocketProvider>
-            <HorusMainContent />
-          </WebSocketProvider>
+          <HorusMainContent />
         </AuthProvider>
       </GamesProvider>
     </ThemeProvider>

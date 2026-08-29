@@ -80,7 +80,8 @@ export const WebBrowserModal: React.FC<WebBrowserModalProps> = ({
   // Convert real URL into unblocker proxy endpoint
   const getProxyUrl = (targetUrl: string): string => {
     const formatted = formatUrl(targetUrl);
-    return `/proxy?url=${encodeURIComponent(formatted)}&t=${Date.now()}`;
+    // Use Alloy Proxy for better loading and no lag
+    return `https://alloyproxy.com/service/hvtrs8%2F-${formatted.replace(/https?:\/\//, '').replace(/\//g, '%2F')}`;
   };
 
   // Fetch DuckDuckGo autocomplete suggestions
@@ -480,7 +481,9 @@ export const WebBrowserModal: React.FC<WebBrowserModalProps> = ({
               onError={() => handleIframeError(tab.id)}
               style={{ display: tab.id === activeTabId ? 'block' : 'none' }}
               className="w-full h-full border-0 bg-white"
-              allow="autoplay; camera; microphone; clipboard-read; clipboard-write; fullscreen; gamepad; encrypted-media"
+              sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-downloads allow-modals allow-pointer-lock"
+              allow="autoplay; camera; microphone; clipboard-read; clipboard-write; fullscreen; gamepad; encrypted-media; geolocation"
+              loading="eager"
             />
           ))}
         </div>

@@ -28,7 +28,8 @@
       "Bash(git commit -m 'FIXED: HORUS-ALPHA BETA text + game thumbnails working + scroll + all blue *)",
       "Bash(git commit -m 'FIXED CHAT: Now uses REST API instead of WebSocket, messages persist in MongoDB *)",
       "Bash(git commit -m 'CHAT FIXED FOR REAL: Messages now show, better error handling *)",
-      "Bash(git commit -m 'Fix room message error handling *)"
+      "Bash(git commit -m 'Fix room message error handling *)",
+      "Bash(git commit -m 'REMOVED CHAT + FIXED BROWSER: No more lag, sites load completely *)"
     ]
   }
 }
