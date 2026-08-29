@@ -230,9 +230,19 @@ app.get('/proxy', async (req, res) => {
             backdrop-filter: blur(10px);
           }
           .error-icon {
-            font-size: 64px;
-            margin-bottom: 20px;
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 20px;
             opacity: 0.8;
+            background: rgba(255, 100, 100, 0.2);
+            border: 2px solid rgba(255, 100, 100, 0.4);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: bold;
+            color: #ff6b6b;
           }
           h2 {
             font-size: 24px;
@@ -256,6 +266,7 @@ app.get('/proxy', async (req, res) => {
           .btn {
             display: inline-block;
             margin-top: 20px;
+            margin-right: 10px;
             padding: 12px 30px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -263,6 +274,9 @@ app.get('/proxy', async (req, res) => {
             border-radius: 30px;
             font-weight: 600;
             transition: transform 0.2s, opacity 0.2s;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
           }
           .btn:hover {
             transform: scale(1.05);
@@ -277,12 +291,13 @@ app.get('/proxy', async (req, res) => {
       </head>
       <body>
         <div class="error-box">
-          <div class="error-icon">😿</div>
+          <div class="error-icon">!</div>
           <h2>Page Cannot Be Loaded</h2>
           <p>This website may be blocking embedding or has security restrictions.</p>
           <div class="url">${formattedUrl}</div>
           <p style="font-size: 12px;">Error: ${err.message}</p>
           <a href="/proxy?url=${encodeURIComponent(formattedUrl)}" class="btn">Try Again</a>
+          <a href="https://www.croxyproxy.com/?q=${encodeURIComponent(formattedUrl)}" target="_blank" class="btn">Open in CroxyProxy</a>
           <p class="info">Some websites don't allow being opened in iframes for security reasons.</p>
         </div>
       </body>
@@ -415,17 +430,25 @@ wss.on('connection', (ws) => {
 });
 
 // -------------------------------------------------------------
-// 5. VITE SPA MIDDLEWARE
+// 5. STATIC FILES (Production) or VITE SPA (Development)
 // -------------------------------------------------------------
-const vite = await createViteServer({
-  server: { middlewareMode: true },
-  appType: 'spa',
-});
-app.use(vite.middlewares);
+const distPath = './dist';
+if (fs.existsSync(distPath)) {
+  app.use(express.static(distPath));
+  app.get('*', (req, res) => {
+    res.sendFile('index.html', { root: distPath });
+  });
+} else {
+  const vite = await createViteServer({
+    server: { middlewareMode: true },
+    appType: 'spa',
+  });
+  app.use(vite.middlewares);
+}
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+  console.log(`Server running at port ${PORT}`);
   console.log(`Wisp server active at ws://localhost:${PORT}/wisp/`);
   console.log(`HTTP proxy unblocker active at http://localhost:${PORT}/proxy?url=...`);
 });
