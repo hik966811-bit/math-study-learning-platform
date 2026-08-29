@@ -15,13 +15,8 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ onComplete }) => {
   const [pKeyPressed, setPKeyPressed] = useState(false);
 
   useEffect(() => {
-    const completed = localStorage.getItem(TUTORIAL_KEY);
-    if (completed === 'true') {
-      onComplete();
-      return;
-    }
     setTimeout(() => setVisible(true), 100);
-  }, [onComplete]);
+  }, []);
 
   useEffect(() => {
     const onFsChange = () => {
@@ -59,7 +54,6 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ onComplete }) => {
   }, [step]);
 
   const handleComplete = useCallback(() => {
-    localStorage.setItem(TUTORIAL_KEY, 'true');
     setVisible(false);
     setTimeout(onComplete, 300);
   }, [onComplete]);
