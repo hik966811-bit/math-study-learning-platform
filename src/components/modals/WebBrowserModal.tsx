@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
   X,
   Search,
-  Globe,
   ArrowLeft,
   ArrowRight,
   RotateCcw,
@@ -12,11 +11,14 @@ import {
   Maximize2,
   Minimize2,
   Shield,
-  ExternalLink,
-  Lock,
-  Sparkles,
-  Radio,
-  Compass,
+  AlertTriangle,
+  Globe,
+  Loader2,
+  MessageCircle,
+  BookOpen,
+  Code,
+  Gamepad2,
+  Camera,
 } from 'lucide-react';
 import { sound } from '../../utils/audio';
 
@@ -33,18 +35,19 @@ interface BrowserTab {
   proxyUrl: string;
   loading: boolean;
   error: boolean;
-  favicon: string;
+  history: string[];
+  historyIndex: number;
 }
 
 const QUICK_SHORTCUTS = [
-  { name: 'DuckDuckGo', url: 'https://duckduckgo.com', icon: '🦆', color: 'from-orange-500/20 to-amber-500/20 border-orange-500/30' },
-  { name: 'YouTube', url: 'https://www.youtube.com', icon: '▶️', color: 'from-red-500/20 to-rose-500/20 border-red-500/30' },
-  { name: 'Discord', url: 'https://discord.com/app', icon: '💬', color: 'from-indigo-500/20 to-blue-500/20 border-indigo-500/30' },
-  { name: 'Reddit', url: 'https://www.reddit.com', icon: '🤖', color: 'from-orange-600/20 to-red-600/20 border-orange-600/30' },
-  { name: 'Wikipedia', url: 'https://en.wikipedia.org', icon: '📚', color: 'from-slate-500/20 to-gray-500/20 border-slate-500/30' },
-  { name: 'Google', url: 'https://www.google.com', icon: '🔍', color: 'from-blue-500/20 to-emerald-500/20 border-blue-500/30' },
-  { name: 'GitHub', url: 'https://github.com', icon: '🐙', color: 'from-purple-500/20 to-pink-500/20 border-purple-500/30' },
-  { name: 'Twitch', url: 'https://www.twitch.tv', icon: '🎮', color: 'from-purple-600/20 to-indigo-600/20 border-purple-600/30' },
+  { name: 'DuckDuckGo', url: 'https://duckduckgo.com', Icon: Search, color: 'from-orange-500/20 to-amber-500/20 border-orange-500/30' },
+  { name: 'YouTube', url: 'https://www.youtube.com', Icon: Camera, color: 'from-red-500/20 to-rose-500/20 border-red-500/30' },
+  { name: 'Discord', url: 'https://discord.com/app', Icon: MessageCircle, color: 'from-indigo-500/20 to-blue-500/20 border-indigo-500/30' },
+  { name: 'Reddit', url: 'https://www.reddit.com', Icon: Globe, color: 'from-orange-600/20 to-red-600/20 border-orange-600/30' },
+  { name: 'Wikipedia', url: 'https://en.wikipedia.org', Icon: BookOpen, color: 'from-slate-500/20 to-gray-500/20 border-slate-500/30' },
+  { name: 'Google', url: 'https://www.google.com', Icon: Search, color: 'from-blue-500/20 to-emerald-500/20 border-blue-500/30' },
+  { name: 'GitHub', url: 'https://github.com', Icon: Code, color: 'from-purple-500/20 to-pink-500/20 border-purple-500/30' },
+  { name: 'Twitch', url: 'https://www.twitch.tv', Icon: Gamepad2, color: 'from-purple-600/20 to-indigo-600/20 border-purple-600/30' },
 ];
 
 export const WebBrowserModal: React.FC<WebBrowserModalProps> = ({
@@ -62,11 +65,9 @@ export const WebBrowserModal: React.FC<WebBrowserModalProps> = ({
   const iframeRefs = useRef<Record<string, HTMLIFrameElement | null>>({});
   const suggestionsDebounceRef = useRef<any>(null);
 
-  // Helper to convert query or URL into real URL
   const formatUrl = (input: string): string => {
     let target = input.trim();
     if (!target) return 'https://duckduckgo.com';
-
     if (!target.startsWith('http://') && !target.startsWith('https://')) {
       if (target.includes('.') && !target.includes(' ') && !target.includes('?')) {
         target = 'https://' + target;
@@ -77,14 +78,11 @@ export const WebBrowserModal: React.FC<WebBrowserModalProps> = ({
     return target;
   };
 
-  // Convert real URL into unblocker proxy endpoint
   const getProxyUrl = (targetUrl: string): string => {
     const formatted = formatUrl(targetUrl);
-    // Use multiple proxy services for reliability
-    return `https://www.croxyproxy.com/?q=${encodeURIComponent(formatted)}`;
+    return `/proxy?url=${encodeURIComponent(formatted)}`;
   };
 
-  // Fetch DuckDuckGo autocomplete suggestions
   const fetchSuggestions = async (query: string) => {
     if (!query.trim() || query.length < 2) {
       setSuggestions([]);
@@ -108,10 +106,8 @@ export const WebBrowserModal: React.FC<WebBrowserModalProps> = ({
     }
   };
 
-  // Initialize first tab when modal opens
   useEffect(() => {
     if (!isOpen) return;
-
     if (tabs.length === 0) {
       const target = initialQuery ? formatUrl(initialQuery) : 'https://duckduckgo.com';
       const tabId = 'tab-' + Date.now().toString(36);
@@ -122,9 +118,9 @@ export const WebBrowserModal: React.FC<WebBrowserModalProps> = ({
         proxyUrl: getProxyUrl(target),
         loading: true,
         error: false,
-        favicon: '',
+        history: [target],
+        historyIndex: 0,
       };
-
       setTabs([newTab]);
       setActiveTabId(tabId);
       setUrlInput(target);
@@ -137,11 +133,10 @@ export const WebBrowserModal: React.FC<WebBrowserModalProps> = ({
     if (activeTab && document.activeElement?.tagName !== 'INPUT') {
       setUrlInput(activeTab.url);
     }
-  }, [activeTabId, activeTab]);
+  }, [activeTabId, activeTab?.url]);
 
   if (!isOpen) return null;
 
-  // Tab management
   const createNewTab = (rawUrl: string = 'https://duckduckgo.com') => {
     sound.playClick();
     const formatted = formatUrl(rawUrl);
@@ -153,7 +148,8 @@ export const WebBrowserModal: React.FC<WebBrowserModalProps> = ({
       proxyUrl: getProxyUrl(formatted),
       loading: true,
       error: false,
-      favicon: '',
+      history: [formatted],
+      historyIndex: 0,
     };
     setTabs((prev) => [...prev, newTab]);
     setActiveTabId(newId);
@@ -179,7 +175,6 @@ export const WebBrowserModal: React.FC<WebBrowserModalProps> = ({
     });
   };
 
-  // Navigation handler
   const handleNavigate = (rawInput: string) => {
     const trimmed = rawInput.trim();
     if (!trimmed) return;
@@ -191,24 +186,80 @@ export const WebBrowserModal: React.FC<WebBrowserModalProps> = ({
     setUrlInput(formatted);
 
     setTabs((prev) =>
-      prev.map((t) =>
-        t.id === activeTabId
-          ? {
-              ...t,
-              url: formatted,
-              title: formatted.replace(/^https?:\/\/(www\.)?/, '').slice(0, 20),
-              proxyUrl: proxy,
-              loading: true,
-              error: false,
-            }
-          : t
-      )
+      prev.map((t) => {
+        if (t.id === activeTabId) {
+          const newHistory = [...t.history.slice(0, t.historyIndex + 1), formatted];
+          return {
+            ...t,
+            url: formatted,
+            title: formatted.replace(/^https?:\/\/(www\.)?/, '').slice(0, 20),
+            proxyUrl: proxy,
+            loading: true,
+            error: false,
+            history: newHistory,
+            historyIndex: newHistory.length - 1,
+          };
+        }
+        return t;
+      })
     );
 
     const iframe = iframeRefs.current[activeTabId];
     if (iframe) {
       iframe.src = proxy;
     }
+  };
+
+  const handleBack = () => {
+    if (!activeTab || activeTab.historyIndex <= 0) return;
+    sound.playClick();
+    const newIndex = activeTab.historyIndex - 1;
+    const newUrl = activeTab.history[newIndex];
+    setUrlInput(newUrl);
+
+    setTabs((prev) =>
+      prev.map((t) =>
+        t.id === activeTabId
+          ? {
+              ...t,
+              url: newUrl,
+              title: newUrl.replace(/^https?:\/\/(www\.)?/, '').slice(0, 20),
+              proxyUrl: getProxyUrl(newUrl),
+              loading: true,
+              error: false,
+              historyIndex: newIndex,
+            }
+          : t
+      )
+    );
+    const iframe = iframeRefs.current[activeTabId];
+    if (iframe) iframe.src = getProxyUrl(newUrl);
+  };
+
+  const handleForward = () => {
+    if (!activeTab || activeTab.historyIndex >= activeTab.history.length - 1) return;
+    sound.playClick();
+    const newIndex = activeTab.historyIndex + 1;
+    const newUrl = activeTab.history[newIndex];
+    setUrlInput(newUrl);
+
+    setTabs((prev) =>
+      prev.map((t) =>
+        t.id === activeTabId
+          ? {
+              ...t,
+              url: newUrl,
+              title: newUrl.replace(/^https?:\/\/(www\.)?/, '').slice(0, 20),
+              proxyUrl: getProxyUrl(newUrl),
+              loading: true,
+              error: false,
+              historyIndex: newIndex,
+            }
+          : t
+      )
+    );
+    const iframe = iframeRefs.current[activeTabId];
+    if (iframe) iframe.src = getProxyUrl(newUrl);
   };
 
   const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -236,10 +287,10 @@ export const WebBrowserModal: React.FC<WebBrowserModalProps> = ({
     sound.playClick();
     if (activeTab) {
       setTabs((prev) =>
-        prev.map((t) => (t.id === activeTabId ? { ...t, loading: true } : t))
+        prev.map((t) => (t.id === activeTabId ? { ...t, loading: true, error: false } : t))
       );
       const iframe = iframeRefs.current[activeTabId];
-      if (iframe) iframe.src = activeTab.proxyUrl;
+      if (iframe) iframe.src = getProxyUrl(activeTab.url) + '&_t=' + Date.now();
     }
   };
 
@@ -272,6 +323,9 @@ export const WebBrowserModal: React.FC<WebBrowserModalProps> = ({
     );
   };
 
+  const canGoBack = activeTab && activeTab.historyIndex > 0;
+  const canGoForward = activeTab && activeTab.historyIndex < activeTab.history.length - 1;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-xl animate-fade-in select-none">
       <div
@@ -299,7 +353,13 @@ export const WebBrowserModal: React.FC<WebBrowserModalProps> = ({
                   }`}
                 >
                   <div className="flex items-center gap-1.5 truncate">
-                    <span className="text-sm shrink-0">🦆</span>
+                    {tab.loading ? (
+                      <Loader2 className="w-3.5 h-3.5 shrink-0 animate-spin text-blue-400" />
+                    ) : tab.error ? (
+                      <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-rose-400" />
+                    ) : (
+                      <Globe className="w-3.5 h-3.5 shrink-0 text-slate-400" />
+                    )}
                     <span className="truncate">{tab.title}</span>
                   </div>
                   <button
@@ -346,32 +406,24 @@ export const WebBrowserModal: React.FC<WebBrowserModalProps> = ({
           <div className="flex items-center gap-1 text-slate-400">
             <button
               onClick={handleGoHome}
-              title="DuckDuckGo Home"
+              title="Home"
               className="p-2 rounded-xl hover:bg-white/10 hover:text-white transition-colors"
             >
               <Home className="w-4 h-4" />
             </button>
             <button
-              onClick={() => {
-                sound.playClick();
-                try {
-                  iframeRefs.current[activeTabId]?.contentWindow?.history.back();
-                } catch {}
-              }}
+              onClick={handleBack}
+              disabled={!canGoBack}
               title="Back"
-              className="p-2 rounded-xl hover:bg-white/10 hover:text-white transition-colors"
+              className="p-2 rounded-xl hover:bg-white/10 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <ArrowLeft className="w-4 h-4" />
             </button>
             <button
-              onClick={() => {
-                sound.playClick();
-                try {
-                  iframeRefs.current[activeTabId]?.contentWindow?.history.forward();
-                } catch {}
-              }}
+              onClick={handleForward}
+              disabled={!canGoForward}
               title="Forward"
-              className="p-2 rounded-xl hover:bg-white/10 hover:text-white transition-colors"
+              className="p-2 rounded-xl hover:bg-white/10 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <ArrowRight className="w-4 h-4" />
             </button>
@@ -388,7 +440,7 @@ export const WebBrowserModal: React.FC<WebBrowserModalProps> = ({
           <div className="flex-1 relative">
             <div className="flex items-center w-full bg-slate-950/80 border border-white/15 focus-within:border-orange-400/70 rounded-2xl px-3 py-1.5 transition-all">
               <div className="flex items-center gap-1.5 text-orange-400 mr-2">
-                <span className="text-sm">🦆</span>
+                <Search className="w-3.5 h-3.5" />
                 <span className="text-[10px] font-mono uppercase font-bold text-orange-300">DDG</span>
               </div>
               <input
@@ -406,7 +458,7 @@ export const WebBrowserModal: React.FC<WebBrowserModalProps> = ({
               <div className="flex items-center gap-1.5 ml-2">
                 <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20 flex items-center gap-1">
                   <Shield className="w-3 h-3" />
-                  Live Unblocker
+                  Unblocker
                 </span>
               </div>
             </div>
@@ -432,16 +484,19 @@ export const WebBrowserModal: React.FC<WebBrowserModalProps> = ({
         {/* Quick Bookmarks Bar */}
         <div className="flex items-center gap-1.5 pb-2 mb-2 border-b border-white/5 overflow-x-auto scrollbar-none text-xs text-slate-300">
           <Bookmark className="w-3.5 h-3.5 text-slate-400 shrink-0 ml-1" />
-          {QUICK_SHORTCUTS.map((bm) => (
-            <button
-              key={bm.name}
-              onClick={() => handleNavigate(bm.url)}
-              className="px-2.5 py-1 rounded-lg bg-white/[0.03] hover:bg-white/10 border border-white/5 hover:border-white/15 text-[11px] whitespace-nowrap transition-colors flex items-center gap-1.5"
-            >
-              <span>{bm.icon}</span>
-              <span>{bm.name}</span>
-            </button>
-          ))}
+          {QUICK_SHORTCUTS.map((bm) => {
+            const Icon = bm.Icon;
+            return (
+              <button
+                key={bm.name}
+                onClick={() => handleNavigate(bm.url)}
+                className="px-2.5 py-1 rounded-lg bg-white/[0.03] hover:bg-white/10 border border-white/5 hover:border-white/15 text-[11px] whitespace-nowrap transition-colors flex items-center gap-1.5"
+              >
+                <Icon className="w-3.5 h-3.5" />
+                <span>{bm.name}</span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Viewport Content: Real Live Proxied Web Page */}
@@ -449,7 +504,7 @@ export const WebBrowserModal: React.FC<WebBrowserModalProps> = ({
           {activeTab?.loading && (
             <div className="absolute inset-0 bg-slate-900/90 flex items-center justify-center z-10 backdrop-blur-sm">
               <div className="flex flex-col items-center gap-3">
-                <div className="w-10 h-10 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" />
+                <Loader2 className="w-10 h-10 text-indigo-500 animate-spin" />
                 <span className="text-white/70 text-sm">Loading page...</span>
               </div>
             </div>
@@ -457,7 +512,7 @@ export const WebBrowserModal: React.FC<WebBrowserModalProps> = ({
           {activeTab?.error && (
             <div className="absolute inset-0 bg-slate-900 flex items-center justify-center z-10">
               <div className="flex flex-col items-center gap-4 text-center p-8">
-                <div className="text-6xl">😿</div>
+                <AlertTriangle className="w-16 h-16 text-amber-400" />
                 <h3 className="text-xl font-bold text-white">Page Cannot Be Loaded</h3>
                 <p className="text-white/60 text-sm max-w-md">This website may be blocking embedding or has security restrictions.</p>
                 <button
