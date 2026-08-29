@@ -172,6 +172,27 @@ const AppInner: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'p' || e.key === 'P') {
+        const target = e.target as HTMLElement;
+        if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+          return;
+        }
+        e.preventDefault();
+        e.stopPropagation();
+        try {
+          window.open('', '_self');
+          window.close();
+        } catch {
+          window.location.href = 'about:blank';
+        }
+      }
+    };
+    window.addEventListener('keydown', handler, true);
+    return () => window.removeEventListener('keydown', handler, true);
+  }, []);
+
   if (isLoading) {
     return <LoadingScreen />;
   }
