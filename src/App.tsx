@@ -164,10 +164,7 @@ const AppInner: React.FC = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
-      const completed = localStorage.getItem('horus_tutorial_completed');
-      if (completed !== 'true') {
-        setShowTutorial(true);
-      }
+      setShowTutorial(true);
     }, 2000);
     return () => clearTimeout(timer);
   }, []);
