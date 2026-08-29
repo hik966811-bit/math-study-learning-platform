@@ -440,7 +440,11 @@ wss.on('connection', (ws) => {
 const distPath = './dist';
 if (fs.existsSync(distPath)) {
   app.use(express.static(distPath));
-  app.get('*', (req, res) => {
+  app.use((req, res, next) => {
+    if (req.method !== 'GET') return next();
+    if (req.path.startsWith('/api') || req.path.startsWith('/proxy') || req.path.startsWith('/ws') || req.path.startsWith('/wisp')) {
+      return next();
+    }
     res.sendFile('index.html', { root: distPath });
   });
 } else {
