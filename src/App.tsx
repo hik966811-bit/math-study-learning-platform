@@ -36,7 +36,7 @@ const LoadingScreen: React.FC = () => {
         </h1>
         <p className="text-cyan-400 text-sm font-bold tracking-widest animate-fade-in animation-delay-200 animate-pulse">ALPHA BETA</p>
         <div className="w-48 h-1 bg-slate-800 rounded-full overflow-hidden animate-fade-in animation-delay-300">
-          <div className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full animate-pulse" style={{ width: '60%' }} />
+          <div className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full animate-loading-bar" />
         </div>
         <div className="flex gap-2 mt-2">
           <div className="w-2 h-2 bg-blue-400 rounded-full animate-loading-dots" />

@@ -602,3 +602,15 @@ button, a, [role="button"] {
 
 .animate-loading-dots:nth-child(1) { animation-delay: -0.32s; }
 .animate-loading-dots:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes loading-bar {
+  0% { width: 0%; }
+  20% { width: 30%; }
+  50% { width: 60%; }
+  80% { width: 85%; }
+  100% { width: 100%; }
+}
+
+.animate-loading-bar {
+  animation: loading-bar 1.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
