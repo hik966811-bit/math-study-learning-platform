@@ -84,10 +84,11 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ onComplete }) => {
 
         <button
           onClick={handleSkip}
-          className="absolute top-4 right-4 p-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-slate-400 hover:text-white transition-all z-10"
-          title="Skip tutorial"
+          className="absolute top-4 right-4 px-4 py-2 rounded-full bg-red-500/20 hover:bg-red-500/40 border border-red-500/40 text-red-300 hover:text-white text-xs font-bold transition-all z-10 flex items-center gap-1.5"
+          title="Skip tutorial and go to site"
         >
           <X className="w-4 h-4" />
+          <span>SKIP</span>
         </button>
 
         <div className="flex items-center justify-center gap-2 mb-6 relative z-10">

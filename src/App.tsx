@@ -176,11 +176,11 @@ const AppInner: React.FC = () => {
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+        return;
+      }
       if (e.key === 'p' || e.key === 'P') {
-        const target = e.target as HTMLElement;
-        if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
-          return;
-        }
         e.preventDefault();
         e.stopPropagation();
         try {
@@ -188,6 +188,16 @@ const AppInner: React.FC = () => {
           window.close();
         } catch {
           window.location.href = 'about:blank';
+        }
+      }
+      if (e.key === 'f' || e.key === 'F') {
+        e.preventDefault();
+        const elem = document.documentElement as any;
+        if (!document.fullscreenElement) {
+          (elem.requestFullscreen || elem.webkitRequestFullscreen || elem.mozRequestFullScreen || elem.msRequestFullscreen)?.call(elem);
+        } else {
+          const doc = document as any;
+          (doc.exitFullscreen || doc.webkitExitFullscreen || doc.mozCancelFullScreen || doc.msExitFullscreen)?.call(doc);
         }
       }
     };
