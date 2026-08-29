@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ThemeProvider } from './context/ThemeContext';
 import { GamesProvider, useGames } from './context/GamesContext';
+import { AuthProvider } from './context/AuthContext';
 import { FloatingOrbs } from './components/background/FloatingOrbs';
 import { FloatingDock } from './components/layout/FloatingDock';
 import { GamesShelfModal } from './components/modals/GamesShelfModal';
@@ -148,9 +149,11 @@ export const App: React.FC = () => {
   return (
     <ThemeProvider>
       <GamesProvider>
-        <WebSocketProvider>
-          <AppInner />
-        </WebSocketProvider>
+        <AuthProvider>
+          <WebSocketProvider>
+            <AppInner />
+          </WebSocketProvider>
+        </AuthProvider>
       </GamesProvider>
     </ThemeProvider>
   );

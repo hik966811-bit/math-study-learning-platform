@@ -28,7 +28,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const savedUsername = localStorage.getItem('username');
 
     if (savedUserId && savedUsername) {
-      // Try to restore session from server
+      // Try to restore session from server (non-blocking)
       fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
