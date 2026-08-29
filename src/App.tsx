@@ -16,6 +16,7 @@ import { Search, Sparkles, Globe, Loader2 } from 'lucide-react';
 import { WebSocketProvider } from './context/WebSocketContext';
 import { TutorialModal } from './components/modals/TutorialModal';
 import { FullscreenGuard } from './components/common/FullscreenGuard';
+import { PanicButton } from './components/common/PanicButton';
 
 const LoadingScreen: React.FC = () => {
   return (
@@ -75,6 +76,7 @@ const HorusMainContent: React.FC = () => {
 
   return (
     <FullscreenGuard>
+    <PanicButton />
     <div className="min-h-screen w-full relative flex flex-col justify-between overflow-hidden select-none bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       <FloatingOrbs />
 
