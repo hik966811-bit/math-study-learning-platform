@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Maximize2, Gamepad2, Eye, ArrowRight, Sparkles, X } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Maximize2, Gamepad2, Eye, Sparkles, X, Check } from 'lucide-react';
 import { sound } from '../../utils/audio';
 
 const TUTORIAL_KEY = 'horus_tutorial_completed';
@@ -11,6 +11,8 @@ interface TutorialModalProps {
 export const TutorialModal: React.FC<TutorialModalProps> = ({ onComplete }) => {
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [visible, setVisible] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [pKeyPressed, setPKeyPressed] = useState(false);
 
   useEffect(() => {
     const completed = localStorage.getItem(TUTORIAL_KEY);
@@ -21,11 +23,52 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ onComplete }) => {
     setTimeout(() => setVisible(true), 100);
   }, [onComplete]);
 
-  const handleComplete = () => {
+  useEffect(() => {
+    const onFsChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', onFsChange);
+    return () => document.removeEventListener('fullscreenchange', onFsChange);
+  }, []);
+
+  useEffect(() => {
+    if (isFullscreen && step === 2) {
+      sound.playCoin();
+      setTimeout(() => setStep(3), 600);
+    }
+  }, [isFullscreen, step]);
+
+  useEffect(() => {
+    if (step !== 4) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'p' || e.key === 'P') {
+        e.preventDefault();
+        setPKeyPressed(true);
+        sound.playCoin();
+        setTimeout(() => {
+          handleComplete();
+          setTimeout(() => {
+            window.open('about:blank', '_self');
+            window.close();
+          }, 200);
+        }, 400);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [step]);
+
+  const handleComplete = useCallback(() => {
     localStorage.setItem(TUTORIAL_KEY, 'true');
-    sound.playClick();
     setVisible(false);
     setTimeout(onComplete, 300);
+  }, [onComplete]);
+
+  const handleFullscreenClick = () => {
+    sound.playClick();
+    try {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } catch {}
   };
 
   const handleSkip = () => {
@@ -44,12 +87,10 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ onComplete }) => {
       </div>
 
       <div className="relative max-w-2xl w-full mx-4 p-8 rounded-3xl bg-gradient-to-br from-slate-900 via-blue-950/80 to-slate-900 border border-blue-400/30 shadow-2xl shadow-blue-500/30 animate-scale-in overflow-hidden">
-        {/* Glow border animation */}
         <div className="absolute inset-0 rounded-3xl opacity-50">
           <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-blue-500/0 via-blue-400/20 to-cyan-400/0 animate-shimmer" />
         </div>
 
-        {/* Close/Skip button */}
         <button
           onClick={handleSkip}
           className="absolute top-4 right-4 p-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-slate-400 hover:text-white transition-all z-10"
@@ -58,7 +99,6 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ onComplete }) => {
           <X className="w-4 h-4" />
         </button>
 
-        {/* Step indicator */}
         <div className="flex items-center justify-center gap-2 mb-6 relative z-10">
           {[1, 2, 3, 4].map((s) => (
             <div
@@ -95,46 +135,39 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ onComplete }) => {
               className="group inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-bold rounded-2xl shadow-lg shadow-blue-500/30 transition-all hover-mega"
             >
               <span>Get Started</span>
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
         )}
 
-        {/* Step 2: Fullscreen */}
+        {/* Step 2: Fullscreen - MUST click the button */}
         {step === 2 && (
           <div className="text-center animate-fade-in-up">
             <div className="flex justify-center mb-6">
               <div className="relative animate-tilt">
-                <div className="w-28 h-28 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-2xl shadow-blue-500/50 animate-glow">
+                <button
+                  onClick={handleFullscreenClick}
+                  className="w-28 h-28 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-2xl shadow-blue-500/50 animate-glow hover-mega cursor-pointer"
+                  title="Click to enter fullscreen"
+                >
                   <Maximize2 className="w-14 h-14 text-white" />
-                </div>
-                <div className="absolute -inset-4 rounded-3xl border-2 border-blue-400/30 animate-pulse" />
-                <div className="absolute -inset-8 rounded-3xl border border-blue-400/20 animate-pulse" style={{ animationDelay: '0.5s' }} />
+                </button>
+                <div className="absolute -inset-4 rounded-3xl border-2 border-blue-400/30 animate-pulse pointer-events-none" />
+                <div className="absolute -inset-8 rounded-3xl border border-blue-400/20 animate-pulse pointer-events-none" style={{ animationDelay: '0.5s' }} />
               </div>
             </div>
             <h2 className="text-3xl font-black text-white mb-3">
-              Press the Fullscreen Button
+              Click the Fullscreen Button
             </h2>
             <p className="text-blue-200 mb-2 max-w-md mx-auto">
-              Click the <span className="px-2 py-1 bg-blue-500/20 border border-blue-400/40 rounded-md font-mono text-sm">⛶</span> button at the bottom of the screen
+              Click the glowing button above to make HORUS fill your entire screen
             </p>
             <p className="text-slate-400 text-sm mb-8 max-w-md mx-auto">
-              This makes HORUS fill your entire screen for the best experience
+              You must enter fullscreen to continue
             </p>
-            <div className="flex items-center justify-center gap-3">
-              <button
-                onClick={() => { sound.playClick(); setStep(1); }}
-                className="px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-semibold rounded-2xl transition-all"
-              >
-                Back
-              </button>
-              <button
-                onClick={() => { sound.playClick(); setStep(3); }}
-                className="group inline-flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-bold rounded-2xl shadow-lg shadow-blue-500/30 transition-all hover-mega"
-              >
-                <span>Got it, Continue</span>
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </button>
+            <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-400/30 animate-pulse">
+              <p className="text-blue-300 text-sm font-semibold">
+                {isFullscreen ? 'Fullscreen active! Loading next step...' : 'Waiting for you to click the button...'}
+              </p>
             </div>
           </div>
         )}
@@ -172,56 +205,45 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ onComplete }) => {
                 </div>
               ))}
             </div>
-            <div className="flex items-center justify-center gap-3">
-              <button
-                onClick={() => { sound.playClick(); setStep(2); }}
-                className="px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-semibold rounded-2xl transition-all"
-              >
-                Back
-              </button>
-              <button
-                onClick={() => { sound.playClick(); setStep(4); }}
-                className="group inline-flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-bold rounded-2xl shadow-lg shadow-blue-500/30 transition-all hover-mega"
-              >
-                <span>Continue</span>
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </button>
-            </div>
+            <button
+              onClick={() => { sound.playClick(); setStep(4); }}
+              className="group inline-flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-bold rounded-2xl shadow-lg shadow-blue-500/30 transition-all hover-mega"
+            >
+              <span>Continue</span>
+            </button>
           </div>
         )}
 
-        {/* Step 4: Stealth mode */}
+        {/* Step 4: Press P to close */}
         {step === 4 && (
           <div className="text-center animate-fade-in-up">
             <div className="flex justify-center mb-6">
               <div className="relative">
-                <div className="w-28 h-28 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center animate-flicker shadow-2xl shadow-blue-500/50">
-                  <Eye className="w-14 h-14 text-white" />
+                <div className={`w-28 h-28 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-2xl shadow-blue-500/50 transition-all ${pKeyPressed ? 'animate-bounce-in scale-125' : 'animate-flicker'}`}>
+                  {pKeyPressed ? <Check className="w-14 h-14 text-white" /> : <Eye className="w-14 h-14 text-white" />}
                 </div>
-                <div className="absolute inset-0 w-28 h-28 rounded-2xl border-4 border-blue-400/50 animate-ping" />
+                {!pKeyPressed && <div className="absolute inset-0 w-28 h-28 rounded-2xl border-4 border-blue-400/50 animate-ping" />}
               </div>
             </div>
             <h2 className="text-3xl font-black text-white mb-3">
-              Stealth Mode Activated
+              {pKeyPressed ? 'Closing...' : 'Stealth Mode'}
             </h2>
             <p className="text-blue-200 mb-2 max-w-md mx-auto">
-                When a teacher approaches, quickly press <span className="px-2 py-1 bg-blue-500/20 border border-blue-400/40 rounded-md font-mono text-sm">ESC</span> or the <span className="px-2 py-1 bg-blue-500/20 border border-blue-400/40 rounded-md font-mono text-sm">⛶</span> button again
+              When a teacher approaches, press the
             </p>
-            <p className="text-slate-400 text-sm mb-8 max-w-md mx-auto">
-              This instantly exits fullscreen so you can switch to your work fast
+            <div className="flex justify-center my-4">
+              <div className="px-8 py-4 bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-blue-400 rounded-2xl shadow-lg shadow-blue-500/50 animate-glow">
+                <span className="text-5xl font-black text-white">P</span>
+              </div>
+            </div>
+            <p className="text-blue-200 mb-2 max-w-md mx-auto">
+              key to instantly close the entire tab
             </p>
-            <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-400/30 mb-8 animate-glow">
-              <p className="text-blue-200 text-sm font-semibold">
-                💡 Pro tip: Bookmark this page for instant access anytime
+            <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-400/30 mt-6">
+              <p className="text-blue-300 text-sm font-semibold">
+                {pKeyPressed ? '✓ Tab closing in a moment...' : 'Press the P key now on your keyboard'}
               </p>
             </div>
-            <button
-              onClick={handleComplete}
-              className="group inline-flex items-center gap-2 px-10 py-4 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-black text-lg rounded-2xl shadow-lg shadow-blue-500/30 transition-all hover-mega"
-            >
-              <span>Let's Go!</span>
-              <Sparkles className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-            </button>
           </div>
         )}
       </div>
