@@ -34,7 +34,7 @@ const LoadingScreen: React.FC = () => {
         <h1 className="text-5xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-500 animate-gradient animate-text-glow animate-fade-in animation-delay-100">
           HORUS
         </h1>
-        <p className="text-cyan-400 text-sm font-bold tracking-widest animate-fade-in animation-delay-200 animate-pulse">LOADING</p>
+        <p className="text-cyan-400 text-sm font-bold tracking-widest animate-fade-in animation-delay-200 animate-pulse">ALPHA BETA</p>
         <div className="w-48 h-1 bg-slate-800 rounded-full overflow-hidden animate-fade-in animation-delay-300">
           <div className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full animate-pulse" style={{ width: '60%' }} />
         </div>

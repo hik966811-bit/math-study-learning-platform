@@ -79,8 +79,7 @@ export const WebBrowserModal: React.FC<WebBrowserModalProps> = ({
   };
 
   const getProxyUrl = (targetUrl: string): string => {
-    const formatted = formatUrl(targetUrl);
-    return `/proxy?url=${encodeURIComponent(formatted)}`;
+    return targetUrl;
   };
 
   const fetchSuggestions = async (query: string) => {
