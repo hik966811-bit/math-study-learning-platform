@@ -131,11 +131,16 @@ app.get('/proxy', async (req, res) => {
       'Origin': urlObj.origin,
     };
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+
     const response = await fetch(formattedUrl, {
       method: 'GET',
       headers,
       redirect: 'follow',
+      signal: controller.signal,
     });
+    clearTimeout(timeoutId);
 
     const contentType = response.headers.get('content-type') || 'text/html';
     res.setHeader('Content-Type', contentType);
