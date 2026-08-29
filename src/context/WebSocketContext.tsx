@@ -59,7 +59,12 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   const sendGlobalMessage = async (text: string) => {
-    if (!user || !text.trim()) return;
+    if (!user) {
+      console.error('No user logged in');
+      alert('Please log in to send messages');
+      return;
+    }
+    if (!text.trim()) return;
 
     try {
       const res = await fetch('/api/chat', {
@@ -74,10 +79,11 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       });
       const data = await res.json();
       if (data.success) {
-        setGlobalMessages((prev) => [...prev, data.message]);
+        await loadGlobalChat(); // Reload to show new message
       }
     } catch (error) {
       console.error('Failed to send message:', error);
+      alert('Failed to send message. Please try again.');
     }
   };
 
@@ -118,7 +124,12 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   const sendRoomMessage = async (text: string) => {
-    if (!user || !text.trim() || !roomCode) return;
+    if (!user) {
+      console.error('No user logged in');
+      alert('Please log in to send messages');
+      return;
+    }
+    if (!text.trim() || !roomCode) return;
 
     try {
       const res = await fetch('/api/chat', {
@@ -144,6 +155,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }
     } catch (error) {
       console.error('Failed to send room message:', error);
+      alert('Failed to send message. Please try again.');
     }
   };
 
