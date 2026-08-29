@@ -155,14 +155,26 @@ export const TutorialModal: React.FC<TutorialModalProps> = ({ onComplete }) => {
             <p className="text-blue-200 mb-2 max-w-md mx-auto">
               Click the glowing button above to make HORUS fill your entire screen
             </p>
-            <p className="text-slate-400 text-sm mb-8 max-w-md mx-auto">
+            <p className="text-slate-400 text-sm mb-6 max-w-md mx-auto">
               You must enter fullscreen to continue
             </p>
-            <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-400/30 animate-pulse">
+            <div className="p-4 rounded-2xl bg-blue-500/10 border border-blue-400/30 mb-4">
               <p className="text-blue-300 text-sm font-semibold">
                 {isFullscreen ? 'Fullscreen active! Loading next step...' : 'Waiting for you to click the button...'}
               </p>
             </div>
+            {!isFullscreen && (
+              <button
+                onClick={() => {
+                  sound.playClick();
+                  setIsFullscreen(true);
+                  setTimeout(() => setStep(3), 600);
+                }}
+                className="group inline-flex items-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold rounded-2xl transition-all"
+              >
+                <span>Or click here to continue</span>
+              </button>
+            )}
           </div>
         )}
 

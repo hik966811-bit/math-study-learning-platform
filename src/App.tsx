@@ -15,6 +15,7 @@ import { sound } from './utils/audio';
 import { Search, Sparkles, Globe, Loader2 } from 'lucide-react';
 import { WebSocketProvider } from './context/WebSocketContext';
 import { TutorialModal } from './components/modals/TutorialModal';
+import { FullscreenGuard } from './components/common/FullscreenGuard';
 
 const LoadingScreen: React.FC = () => {
   return (
@@ -73,6 +74,7 @@ const HorusMainContent: React.FC = () => {
   };
 
   return (
+    <FullscreenGuard>
     <div className="min-h-screen w-full relative flex flex-col justify-between overflow-hidden select-none bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       <FloatingOrbs />
 
@@ -154,6 +156,7 @@ const HorusMainContent: React.FC = () => {
       <AddGameModal isOpen={isAddGameOpen} onClose={() => setIsAddGameOpen(false)} />
       <GamePlayerModal game={activeGame} onClose={() => setActiveGame(null)} />
     </div>
+    </FullscreenGuard>
   );
 };
 
