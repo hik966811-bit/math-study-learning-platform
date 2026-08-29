@@ -110,6 +110,40 @@ app.post('/api/update-profile', (req, res) => {
 // -------------------------------------------------------------
 // 3. HTTP PROXY UNBLOCKER (/proxy)
 // -------------------------------------------------------------
+const PROXY_SERVICES = [
+  {
+    name: 'AllOrigins',
+    buildUrl: (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  },
+  {
+    name: 'corsproxy.io',
+    buildUrl: (url) => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+  },
+  {
+    name: 'codetabs',
+    buildUrl: (url) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+  },
+];
+
+async function tryFetch(targetUrl, headers) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+  try {
+    const response = await fetch(targetUrl, {
+      method: 'GET',
+      headers,
+      redirect: 'follow',
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+    return response;
+  } catch (err) {
+    clearTimeout(timeoutId);
+    throw err;
+  }
+}
+
 app.get('/proxy', async (req, res) => {
   const targetUrl = req.query.url;
   if (!targetUrl || typeof targetUrl !== 'string') {
@@ -121,92 +155,49 @@ app.get('/proxy', async (req, res) => {
     formattedUrl = 'https://' + formattedUrl;
   }
 
+  const urlObj = new URL(formattedUrl);
+  const baseHeaders = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+    'Accept': req.headers['accept'] || 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    'Accept-Language': req.headers['accept-language'] || 'en-US,en;q=0.9',
+    'Referer': urlObj.origin,
+    'Origin': urlObj.origin,
+  };
+
+  // Try direct fetch first
+  let response = null;
+  let lastError = null;
+
   try {
-    const urlObj = new URL(formattedUrl);
-    const headers = {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-      'Accept': req.headers['accept'] || 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-      'Accept-Language': req.headers['accept-language'] || 'en-US,en;q=0.9',
-      'Referer': urlObj.origin,
-      'Origin': urlObj.origin,
-    };
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
-
-    const response = await fetch(formattedUrl, {
-      method: 'GET',
-      headers,
-      redirect: 'follow',
-      signal: controller.signal,
-    });
-    clearTimeout(timeoutId);
-
-    const contentType = response.headers.get('content-type') || 'text/html';
-    res.setHeader('Content-Type', contentType);
-
-    // Strip frame restrictions
-    res.removeHeader('X-Frame-Options');
-    res.removeHeader('Content-Security-Policy');
-    res.removeHeader('Cross-Origin-Opener-Policy');
-    res.removeHeader('Cross-Origin-Embedder-Policy');
-    res.setHeader('Access-Control-Allow-Origin', '*');
-
-    if (contentType.includes('text/html')) {
-      let html = await response.text();
-
-      // Inject base href & unblocker hooks
-      const injectScript = `
-        <base href="${formattedUrl}">
-        <script>
-          // Automatic link and form proxy interceptor
-          document.addEventListener('DOMContentLoaded', () => {
-            document.querySelectorAll('a').forEach(a => {
-              const orig = a.getAttribute('href');
-              if (orig && !orig.startsWith('#') && !orig.startsWith('javascript:')) {
-                a.addEventListener('click', (e) => {
-                  try {
-                    const abs = new URL(orig, "${formattedUrl}").href;
-                    if (abs.startsWith('http')) {
-                      e.preventDefault();
-                      window.location.href = '/proxy?url=' + encodeURIComponent(abs);
-                    }
-                  } catch(err) {}
-                });
-              }
-            });
-
-            document.querySelectorAll('form').forEach(f => {
-              f.addEventListener('submit', (e) => {
-                const action = f.getAttribute('action') || '';
-                try {
-                  const abs = new URL(action, "${formattedUrl}").href;
-                  const inputs = new URLSearchParams(new FormData(f)).toString();
-                  const target = abs.includes('?') ? (abs + '&' + inputs) : (abs + '?' + inputs);
-                  e.preventDefault();
-                  window.location.href = '/proxy?url=' + encodeURIComponent(target);
-                } catch(err) {}
-              });
-            });
-          });
-        </script>
-      `;
-
-      if (html.includes('<head>')) {
-        html = html.replace('<head>', '<head>' + injectScript);
-      } else if (html.includes('<html>')) {
-        html = html.replace('<html>', '<html><head>' + injectScript + '</head>');
-      } else {
-        html = injectScript + html;
-      }
-
-      return res.send(html);
-    } else {
-      const buffer = Buffer.from(await response.arrayBuffer());
-      return res.send(buffer);
-    }
+    response = await tryFetch(formattedUrl, baseHeaders);
   } catch (err) {
-    console.error('Proxy fetch error for', formattedUrl, ':', err.message);
+    console.log(`Direct fetch failed for ${formattedUrl}, trying proxies...`);
+    lastError = err;
+  }
+
+  // If direct fetch failed, try proxy services
+  if (!response) {
+    for (const service of PROXY_SERVICES) {
+      try {
+        const proxyUrl = service.buildUrl(formattedUrl);
+        const proxyResponse = await tryFetch(proxyUrl, {
+          'User-Agent': baseHeaders['User-Agent'],
+        });
+        if (proxyResponse.ok) {
+          response = proxyResponse;
+          console.log(`Successfully fetched via ${service.name}`);
+          break;
+        }
+      } catch (err) {
+        console.log(`${service.name} failed:`, err.message);
+        lastError = err;
+      }
+    }
+  }
+
+  if (!response) {
+    const errorMsg = lastError ? lastError.message : 'All proxy services failed';
+    console.error('All proxy attempts failed for', formattedUrl, ':', errorMsg);
     res.status(502).send(`
       <!DOCTYPE html>
       <html>
@@ -300,7 +291,7 @@ app.get('/proxy', async (req, res) => {
           <h2>Page Cannot Be Loaded</h2>
           <p>This website may be blocking embedding or has security restrictions.</p>
           <div class="url">${formattedUrl}</div>
-          <p style="font-size: 12px;">Error: ${err.message}</p>
+          <p style="font-size: 12px;">Error: ${errorMsg}</p>
           <a href="/proxy?url=${encodeURIComponent(formattedUrl)}" class="btn">Try Again</a>
           <a href="https://www.croxyproxy.com/?q=${encodeURIComponent(formattedUrl)}" target="_blank" class="btn">Open in CroxyProxy</a>
           <p class="info">Some websites don't allow being opened in iframes for security reasons.</p>
@@ -308,6 +299,69 @@ app.get('/proxy', async (req, res) => {
       </body>
       </html>
     `);
+    return;
+  }
+
+  const contentType = response.headers.get('content-type') || 'text/html';
+  res.setHeader('Content-Type', contentType);
+
+  res.removeHeader('X-Frame-Options');
+  res.removeHeader('Content-Security-Policy');
+  res.removeHeader('Cross-Origin-Opener-Policy');
+  res.removeHeader('Cross-Origin-Embedder-Policy');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+
+  if (contentType.includes('text/html')) {
+    let html = await response.text();
+
+    const injectScript = `
+        <base href="${formattedUrl}">
+        <script>
+          // Automatic link and form proxy interceptor
+          document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('a').forEach(a => {
+              const orig = a.getAttribute('href');
+              if (orig && !orig.startsWith('#') && !orig.startsWith('javascript:')) {
+                a.addEventListener('click', (e) => {
+                  try {
+                    const abs = new URL(orig, "${formattedUrl}").href;
+                    if (abs.startsWith('http')) {
+                      e.preventDefault();
+                      window.location.href = '/proxy?url=' + encodeURIComponent(abs);
+                    }
+                  } catch(err) {}
+                });
+              }
+            });
+
+            document.querySelectorAll('form').forEach(f => {
+              f.addEventListener('submit', (e) => {
+                const action = f.getAttribute('action') || '';
+                try {
+                  const abs = new URL(action, "${formattedUrl}").href;
+                  const inputs = new URLSearchParams(new FormData(f)).toString();
+                  const target = abs.includes('?') ? (abs + '&' + inputs) : (abs + '?' + inputs);
+                  e.preventDefault();
+                  window.location.href = '/proxy?url=' + encodeURIComponent(target);
+                } catch(err) {}
+              });
+            });
+          });
+        </script>
+      `;
+
+    if (html.includes('<head>')) {
+      html = html.replace('<head>', '<head>' + injectScript);
+    } else if (html.includes('<html>')) {
+      html = html.replace('<html>', '<html><head>' + injectScript + '</head>');
+    } else {
+      html = injectScript + html;
+    }
+
+    return res.send(html);
+  } else {
+    const buffer = Buffer.from(await response.arrayBuffer());
+    return res.send(buffer);
   }
 });
 
