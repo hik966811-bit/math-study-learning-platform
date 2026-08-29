@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 
 interface Message {
@@ -35,113 +35,115 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [roomCode, setRoomCode] = useState<string | null>(null);
   const [activeRoom, setActiveRoom] = useState<Room | null>(null);
 
-  const wsRef = useRef<WebSocket | null>(null);
-  const reconnectTimeoutRef = useRef<any>(null);
-
-  const connect = () => {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/ws`;
-    const ws = new WebSocket(wsUrl);
-
-    ws.onopen = () => {
-      console.log('Connected to Horus Real-time Gateway');
-      // If we were inside a room, rejoin on reconnect
-      if (roomCode) {
-        ws.send(JSON.stringify({ type: 'joinRoom', roomCode }));
-      }
-    };
-
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.type === 'onlineCount') {
-          setOnlineCount(data.count);
-        } else if (data.type === 'initGlobalChat') {
-          setGlobalMessages(data.messages);
-        } else if (data.type === 'globalMessage') {
-          setGlobalMessages((prev) => [...prev.slice(-49), data.message]);
-        } else if (data.type === 'roomCreated') {
-          setRoomCode(data.roomCode);
-          setActiveRoom(data.room);
-        } else if (data.type === 'roomJoined') {
-          setRoomCode(data.roomCode);
-          setActiveRoom(data.room);
-        } else if (data.type === 'roomMessage') {
-          if (data.roomCode === roomCode) {
-            setActiveRoom((prev) => {
-              if (!prev) return null;
-              return {
-                ...prev,
-                messages: [...prev.messages, data.message]
-              };
-            });
-          }
-        } else if (data.type === 'error') {
-          alert(data.message);
-        }
-      } catch (err) {
-        console.error('WS parsing error:', err);
-      }
-    };
-
-    ws.onclose = () => {
-      console.log('Disconnected from Horus Gateway. Reconnecting...');
-      reconnectTimeoutRef.current = setTimeout(connect, 3000);
-    };
-
-    ws.onerror = () => {
-      ws.close();
-    };
-
-    wsRef.current = ws;
-  };
-
+  // Load global chat on mount
   useEffect(() => {
-    connect();
-    return () => {
-      if (wsRef.current) wsRef.current.close();
-      if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
-    };
-  }, [roomCode]);
+    loadGlobalChat();
+    const interval = setInterval(loadGlobalChat, 3000); // Refresh every 3 seconds
+    return () => clearInterval(interval);
+  }, []);
 
-  const sendGlobalMessage = (text: string) => {
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({
-        type: 'globalMessage',
-        username: user.username,
-        avatarUrl: user.avatarUrl,
-        text
-      }));
+  const loadGlobalChat = async () => {
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'getGlobalChat' }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setGlobalMessages(data.messages);
+      }
+    } catch (error) {
+      console.error('Failed to load chat:', error);
     }
   };
 
-  const createRoom = (roomName: string) => {
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({
-        type: 'createRoom',
-        roomName
-      }));
+  const sendGlobalMessage = async (text: string) => {
+    if (!user || !text.trim()) return;
+
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'globalMessage',
+          username: user.username,
+          avatarUrl: user.avatarUrl,
+          text: text.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setGlobalMessages((prev) => [...prev, data.message]);
+      }
+    } catch (error) {
+      console.error('Failed to send message:', error);
     }
   };
 
-  const joinRoom = (code: string) => {
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({
-        type: 'joinRoom',
-        roomCode: code
-      }));
+  const createRoom = async (roomName: string) => {
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'createRoom', roomName }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setRoomCode(data.roomCode);
+        setActiveRoom(data.room);
+      }
+    } catch (error) {
+      console.error('Failed to create room:', error);
     }
   };
 
-  const sendRoomMessage = (text: string) => {
-    if (roomCode && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({
-        type: 'roomMessage',
-        roomCode,
-        username: user.username,
-        avatarUrl: user.avatarUrl,
-        text
-      }));
+  const joinRoom = async (code: string) => {
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'joinRoom', roomCode: code }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setRoomCode(data.roomCode);
+        setActiveRoom(data.room);
+      } else {
+        alert(data.error || 'Room not found');
+      }
+    } catch (error) {
+      console.error('Failed to join room:', error);
+    }
+  };
+
+  const sendRoomMessage = async (text: string) => {
+    if (!user || !text.trim() || !roomCode) return;
+
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'roomMessage',
+          roomCode,
+          username: user.username,
+          avatarUrl: user.avatarUrl,
+          text: text.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setActiveRoom((prev) => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            messages: [...prev.messages, data.message],
+          };
+        });
+      }
+    } catch (error) {
+      console.error('Failed to send room message:', error);
     }
   };
 
@@ -161,7 +163,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         createRoom,
         joinRoom,
         sendRoomMessage,
-        leaveRoom
+        leaveRoom,
       }}
     >
       {children}
@@ -171,6 +173,8 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
 export const useWebSocket = () => {
   const context = useContext(WebSocketContext);
-  if (!context) throw new Error('useWebSocket must be used within a WebSocketProvider');
+  if (!context) {
+    throw new Error('useWebSocket must be used within WebSocketProvider');
+  }
   return context;
 };
